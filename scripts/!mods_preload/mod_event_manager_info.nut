@@ -1,7 +1,7 @@
 ::EventManagerInfo <- {
 	ID = "mod_event_manager_info",
 	Name = "Event Manager Info",
-	Version = "0.9.1"
+	Version = "0.9.2"
 }
 
 ::mods_registerMod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
@@ -59,7 +59,6 @@
 			local allScores = 0;
 			local nonEventBroScore = 0;
 			local eventBroScore = 0;
-			//local allEventsInPool = {};
 			local broEventsInPool = {};
 			local nonBroEventsInPool = {};
 
@@ -105,13 +104,25 @@
 			}
 
 			local currentTile = this.World.State.getPlayer().getTile();
+
 			local tileDetails = {};
-			//tileDetails["Name"] <- currentTile.getName();
+
 			tileDetails["OnRoad"] <- currentTile.HasRoad;
-			//tileDetails["TerrainType"] = this.Const.World.TerrainType[currentTile.Type];
+
+			foreach (key, value in this.Const.World.TerrainType) {
+				if (value == currentTile.Type) {
+					tileDetails["Type"] <- key;
+				}
+			}
+
+			foreach (key, value in this.Const.World.TerrainTacticalType) {
+				if (value == currentTile.TacticalType) {
+					tileDetails["TacticalType"] <- key;
+				}
+			}
 
 			::logWarning("********** Current Tile Details **********");
-			::MSU.Log.printData(currentTile);
+			::MSU.Log.printData(tileDetails);
 
 			::logWarning("Sum of all event scores: " + allScores);
 			::logWarning("Sum of non-brother event scores: " + nonEventBroScore);
@@ -124,17 +135,6 @@
 			::MSU.Log.printData(nonBroEventsInPool);
 
 			::logWarning("************************************************************************************");
-
-			// //focus on Thief in the night..
-			// local thiefEvent = new("scripts/events/events/thief_caught_event");
-			// thiefEvent.onUpdateScore();
-
-			// //local test = thiefEvent.isSomethingToSee() && this.World.getTime().Days >= 7 ? 50 : 10;
-
-			// //::logWarning("WHat does isSomethingToSee do? ", test);
-
-			// ::logWarning("Chance for Caught Thief: " + thiefEvent.m.Score);
-			// ::MSU.Log.printData(thiefEvent.m);
 		} catch(exception) {
 			::logError("The following exception occurred while trying to print events to the log.");
 			::MSU.Log.printData(exception);
