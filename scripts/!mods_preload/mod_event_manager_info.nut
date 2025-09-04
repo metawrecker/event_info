@@ -1,7 +1,8 @@
 ::EventManagerInfo <- {
 	ID = "mod_event_manager_info",
 	Name = "Event Manager Info",
-	Version = "0.9.2"
+	Version = "0.9.3",
+	Events = []
 }
 
 ::mods_registerMod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
@@ -37,7 +38,7 @@
 		ThiefCaught = "event.thief_caught",
 		CannonExecution = "event.cannon_execution",
 		MelonThief = "event.melon_thief",
-		FillyFiddler = "event.the_horseman"
+		TheHorseman = "event.the_horseman"
 	};
 
 	local eventMayGiveBrother = function(currentEventId)
@@ -45,6 +46,26 @@
 		foreach ( _, eventId in brotherEventIds)
 		{
 			if (currentEventId == eventId) {
+				if (eventId == "event.fire_juggler") {
+					//need to check for a juggler in the company for if the bro can even be 'hired'
+				}
+
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	local playerIsTooCloseToEnemyParty = function()
+	{
+		local parties = this.World.getAllEntitiesAtPos(this.World.State.getPlayer().getPos(), 400.0);
+
+		foreach( party in parties )
+		{
+			if (!party.isAlliedWithPlayer())
+			{
 				return true;
 			}
 		}
@@ -55,28 +76,59 @@
 	local printEventsToLog = function()
 	{
 		try {
-			local eventManager = new("scripts/events/event_manager");
+			//local eventManager = new("scripts/events/event_manager");
 			local allScores = 0;
 			local nonEventBroScore = 0;
 			local eventBroScore = 0;
 			local broEventsInPool = {};
 			local nonBroEventsInPool = {};
 
-			for( local i = 0; i < eventManager.m.Events.len(); i = ++i )
+			try {
+				// local test = ::MSU.asWeakTableRef("events/event_manager");
+
+				// ::MSU.Log.printData(test);
+
+				local test = ::World.Events;
+
+				local test2 = ::Events;
+
+				//::MSU.Log.printData(test);
+
+				::logWarning(test);
+				::MSU.Log.printData(test2);
+
+
+				// local allEvents = ::MSU.getField("events/event_manager", "Events"); //::mods_getField("events/event_manager", "Events"); //::EventManagerInfo.Events;
+				// local lastEventId = ::MSU.getField("events/event_manager", "LastEventID");
+
+				// ::MSU.Log.printData(allEvents);
+				// ::MSU.Log.printData(lastEventId);
+			} catch (exception){
+				::logError("Error while trying to get fields" + exception);
+			}
+
+			local allEvents = [];
+
+			if (allEvents.len() == 0) {
+				::logError("No events are in memory yet!");
+				return;
+			}
+
+			for( local i = 0; i < allEvents.len(); i = ++i )
 			{
-				if (eventManager.m.LastEventID == eventManager.m.Events[i].getID() && !eventManager.m.Events[i].isSpecial())
+				if (lastEventId == allEvents[i].getID() && !allEvents[i].isSpecial())
 				{
-					eventManager.m.Events[i].clear();
+					allEvents[i].clear();
 				}
 				else
 				{
-					eventManager.m.Events[i].update();
+					allEvents[i].update();
 				}
 
-				if (eventManager.m.Events[i].getScore() > 0)
+				if (allEvents[i].getScore() > 0)
 				{
-					local eventScore = eventManager.m.Events[i].getScore();
-					local eventCooldown = eventManager.m.Events[i].m.Cooldown / this.World.getTime().SecondsPerDay;
+					local eventScore = allEvents[i].getScore();
+					local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
 
 					if (eventCooldown > 99999) {
 						eventCooldown = 99999;
@@ -86,12 +138,12 @@
 
 					allScores += eventScore;
 
-					if (eventMayGiveBrother(eventManager.m.Events[i].getID())) {
-						broEventsInPool[eventManager.m.Events[i].getID()] <- logDetail;
+					if (eventMayGiveBrother(allEvents[i].getID())) {
+						broEventsInPool[allEvents[i].getID()] <- logDetail;
 						eventBroScore += eventScore;
 					}
 					else {
-						nonBroEventsInPool[eventManager.m.Events[i].getID()] <- logDetail;
+						nonBroEventsInPool[allEvents[i].getID()] <- logDetail;
 						nonEventBroScore += eventScore;
 					}
 				}
@@ -124,6 +176,8 @@
 			::logWarning("********** Current Tile Details **********");
 			::MSU.Log.printData(tileDetails);
 
+			::logWarning("Too close to enemy party? " + playerIsTooCloseToEnemyParty());
+
 			::logWarning("Sum of all event scores: " + allScores);
 			::logWarning("Sum of non-brother event scores: " + nonEventBroScore);
 			::logWarning("Sum of only event brother scores: " + eventBroScore + ". Chance for any event bro: " + ::MSU.Math.roundToDec( chanceForEventBrother, 4 ) + "%");
@@ -144,6 +198,41 @@
 	::EventManagerInfo.Mod.Keybinds.addSQKeybind("PrintEvents", "ctrl+e", ::MSU.Key.State.All, function() {
 		printEventsToLog();
 	}, "Print events", ::MSU.Key.KeyState.Press);
+
+	// ::mods_hookExactClass("events/event_manager", function (o)
+	// {
+	// 	// ::logWarning("Hooked event manager!");
+
+	// 	// try {
+	// 	// 	::MSU.Log.printData(o.m.Events);
+	// 	// } catch (exception){
+	// 	// 	::logError(exception);
+	// 	// }
+
+	// 	try {
+
+	// 		local onUpdate = o.update;
+	// 		o.update = function()
+	// 		{
+	// 			onUpdate();
+
+	// 			::logWarning("Update() hook run!");
+
+	// 			::MSU.Log.printData(o.m.Events);
+
+	// 			///this doesn't appear to work --- why..
+
+
+	// 			::EventManagerInfo.Events = o.m.Events;
+	// 		}
+	// 	} catch (exception){
+	// 		::logError("Error while hooking update()" + exception);
+	// 	}
+
+
+	// });
+
+
 
 	// enable later when JS and or CSS files are needed
 	// ::mods_registerJS("./mods/EventManagerInfo/index.js");
