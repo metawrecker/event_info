@@ -43,7 +43,7 @@
 
 	local eventMayGiveBrother = function(currentEventId)
 	{
-		foreach ( _, eventId in brotherEventIds)
+		foreach ( key, eventId in brotherEventIds)
 		{
 			if (currentEventId == eventId) {
 				if (eventId == "event.fire_juggler") {
@@ -73,19 +73,19 @@
 		return false;
 	}
 
-	local sortEventsByScore = function (eventList)
-	{
-		local orderedList = {};
+	// local sortEventsByScore = function (eventList)
+	// {
+	// 	local orderedList = {};
 
-		foreach (key, value in eventList)
-		{
-			//need to put values in ascending order?
+	// 	foreach (key, value in eventList)
+	// 	{
+	// 		//need to put values in ascending order?
 
-			if (key in orderedList) {
+	// 		if (key in orderedList) {
 
-			}
-		}
-	}
+	// 		}
+	// 	}
+	// }
 
 	::EventManagerInfo.PrintEventsToLog = function(printAll, clearLastFiredEvent)
 	{
@@ -136,9 +136,8 @@
 				}
 
 				if (allEvents[i].getScore() == 0 && allEvents[i].m.CooldownUntil > 0 && !allEvents[i].isSpecial()) {
-					//::logWarning(allEvents[i].getID() + " is on cooldown until " + allEvents[i].m.CooldownUntil);
-
 					local cooldownUntil = this.Math.floor(allEvents[i].m.CooldownUntil / this.World.getTime().SecondsPerDay);
+					local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay);
 
 					if (cooldownUntil > 9999) {
 						cooldownUntil = 9999;
@@ -147,8 +146,7 @@
 					eventsOnCooldown.append({
 							id = allEvents[i].getID(),
 							onCooldownUntilDay = cooldownUntil
-							//score = eventScore,
-							//cooldown = eventCooldown
+							firedOnDay = firedOn
 						});
 				}
 
@@ -159,7 +157,6 @@
 					allScores += eventScore;
 
 					if (eventMayGiveBrother(allEvents[i].getID())) {
-						//broEventsInPool[allEvents[i].getID()] <- logDetail;
 						broEventsInPool.append({
 							id = allEvents[i].getID(),
 							score = eventScore,
@@ -168,7 +165,6 @@
 						eventBroScore += eventScore;
 					}
 					else {
-						//nonBroEventsInPool[allEvents[i].getID()] <- logDetail;
 						nonBroEventsInPool.append({
 							id = allEvents[i].getID(),
 							score = eventScore,
@@ -231,11 +227,11 @@
 
 			::logWarning("********** Other (non bro!) events that you currently qualify for **********");
 			::MSU.Array.sortAscending(nonBroEventsInPool, "score");
-			::MSU.Log.printData(nonBroEventsInPool, 3);
+			::MSU.Log.printData(nonBroEventsInPool, 3, false, 3);
 
 			::logWarning("********** Fired events that are now on cooldown **********");
-			::MSU.Array.sortAscending(eventsOnCooldown, "onCooldownUntilDay");
-			::MSU.Log.printData(eventsOnCooldown, 3);
+			::MSU.Array.sortAscending(eventsOnCooldown, "firedOnDay");
+			::MSU.Log.printData(eventsOnCooldown, 3, false, 3);
 
 			//::EventManagerInfo.Mod.Debug.addPopupMessage( "Test text", ::MSU.Popup.State.Small );
 
@@ -249,40 +245,6 @@
 	::EventManagerInfo.Mod.Keybinds.addSQKeybind("PrintEvents", "ctrl+e", ::MSU.Key.State.All, function() {
 		::EventManagerInfo.PrintEventsToLog(true, true);
 	}, "Print events", ::MSU.Key.KeyState.Press);
-
-	// ::mods_hookExactClass("events/event_manager", function (o)
-	// {
-	// 	// ::logWarning("Hooked event manager!");
-
-	// 	// try {
-	// 	// 	::MSU.Log.printData(o.m.Events);
-	// 	// } catch (exception){
-	// 	// 	::logError(exception);
-	// 	// }
-
-	// 	try {
-
-	// 		local onUpdate = o.update;
-	// 		o.update = function()
-	// 		{
-	// 			onUpdate();
-
-	// 			::logWarning("Update() hook run!");
-
-	// 			::MSU.Log.printData(o.m.Events);
-
-	// 			///this doesn't appear to work --- why..
-
-
-	// 			::EventManagerInfo.Events = o.m.Events;
-	// 		}
-	// 	} catch (exception){
-	// 		::logError("Error while hooking update()" + exception);
-	// 	}
-
-
-	// });
-
 
 	::include("mod_event_manager/event_manager");
 
