@@ -1,17 +1,35 @@
 ::EventManagerInfo <- {
 	ID = "mod_event_manager_info",
 	Name = "Event Manager Info",
-	Version = "0.9.3",
-	PrintEventsToLog = null
+	Version = "0.9.4"
 }
 
-::mods_registerMod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+local requiredMods = [
+	"vanilla >= 1.5.1-6",
+	"mod_msu >= 1.2.0",
+	"mod_modern_hooks >= 0.4.10"
+];
 
-::mods_queue(::EventManagerInfo.ID, "mod_msu(>=1.2.0)", function()
-{
-	::EventManagerInfo.Mod <- ::MSU.Class.Mod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+local modLoadOrder = [];
+foreach (mod in requiredMods) {
+	local idx = mod.find(" ");
+	modLoadOrder.push(">" + (idx == null ? mod : mod.slice(0, idx)));
+}
 
-	local brotherEventIds = {
+::EventManagerInfo.HooksMod <- ::Hooks.register(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+::EventManagerInfo.HooksMod.require(requiredMods);
+
+//::mods_registerMod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+
+::EventManagerInfo.HooksMod.queue(modLoadOrder, function() {
+ 	local mod = ::MSU.Class.Mod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+	::EventManagerInfo.Mod <- mod;
+
+	// mod.Registry.addModSource(::MSU.System.Registry.ModSourceDomain.GitHub, "https://github.com/metawrecker/equal_location_scouting");
+	// mod.Registry.setUpdateSource(::MSU.System.Registry.ModSourceDomain.GitHub);
+	//mod.Registry.addModSource(::MSU.System.Registry.ModSourceDomain.NexusMods, "https://www.nexusmods.com/battlebrothers/mods/937");
+
+		local brotherEventIds = {
 		Volunteers = "event.volunteers",
 		AnatomistJoin = "event.anatomist_joins",
 		AnatomistBlightedGuy = "event.anatomist_helps_blighted_guy_1",
@@ -86,7 +104,7 @@
 	// 	}
 	// }
 
-	::EventManagerInfo.PrintEventsToLog = function(printAll, clearLastFiredEvent)
+	::EventManagerInfo.PrintEventsToLog <- function(printAll, clearLastFiredEvent)
 	{
 		try {
 			//local eventManager = new("scripts/events/event_manager");
@@ -243,13 +261,31 @@
 		}
 	}
 
+	::EventManagerInfo.DisplayEventsInUI <- function()
+	{
+		::EventManagerInfo.EventScreen.show();
+	}
+
 	::EventManagerInfo.Mod.Keybinds.addSQKeybind("PrintEvents", "ctrl+e", ::MSU.Key.State.All, function() {
 		::EventManagerInfo.PrintEventsToLog(true, true);
+		::EventManagerInfo.DisplayEventsInUI();
 	}, "Print events", ::MSU.Key.KeyState.Press);
 
 	::include("mod_event_manager/event_manager");
+	::include("equal_location_scouting/location");
 
-	// enable later when JS and or CSS files are needed
-	// ::mods_registerJS("./mods/EventManagerInfo/index.js");
-	// ::mods_registerCSS("./mods/EventManagerInfo/index.css");
-})
+	::Hooks.registerJS("ui/mods/event_manager/event_screen.js");
+	::Hooks.registerCSS("ui/mods/event_manager/event_screen.css");
+
+	::EventManagerInfo.EventScreen <- ::new("scripts/ui/screens/event_screen");
+	::MSU.UI.registerConnection(::EventManagerInfo.EventScreen);
+});
+
+// ::mods_queue(::EventManagerInfo.ID, "mod_msu(>=1.2.0)", function()
+// {
+// 	::EventManagerInfo.Mod <- ::MSU.Class.Mod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
+
+// 	// enable later when JS and or CSS files are needed
+// 	// ::mods_registerJS("./mods/EventManagerInfo/index.js");
+// 	// ::mods_registerCSS("./mods/EventManagerInfo/index.css");
+// })
