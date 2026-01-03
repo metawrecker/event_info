@@ -6,7 +6,7 @@
 
 local requiredMods = [
 	"vanilla >= 1.5.1-6",
-	"mod_msu >= 1.2.0",
+	"mod_msu >= 1.3.0",
 	"mod_modern_hooks >= 0.4.10"
 ];
 
@@ -29,66 +29,11 @@ foreach (mod in requiredMods) {
 	// mod.Registry.setUpdateSource(::MSU.System.Registry.ModSourceDomain.GitHub);
 	//mod.Registry.addModSource(::MSU.System.Registry.ModSourceDomain.NexusMods, "https://www.nexusmods.com/battlebrothers/mods/937");
 
-		local brotherEventIds = {
-		Volunteers = "event.volunteers",
-		AnatomistJoin = "event.anatomist_joins",
-		AnatomistBlightedGuy = "event.anatomist_helps_blighted_guy_1",
-		CultistJoins = "event.cultist_origin_flock",
-		DeserterJoinsDeserterOrigin = "event.deserter_origin_volunteer",
-		SquireJoinsLonewolfOrigin = "event.lone_wolf_origin_squire",
-		IndebtedJoinsManhunterOrigin = "event.manhunters_origin_capture_prisoner",
-		Pirates = "event.pirates",
-		OathtakerJoins = "event.oathtaker_joins",
-		BastardAssassin = "event.bastard_assassin",
-		RetiredGladiator = "event.retired_gladiator",
-		Juggler = "event.fire_juggler",
-		PimpVsHarlot = "event.pimp_vs_harlot",
-		ImprisonedWildman = "event.imprisoned_wildman",
-		ConvertedCrusader = "event.crisis.holywar_crucified_1",
-		CivilwarDeserter = "event.crisis.civilwar_deserter",
-		MasterNoUseApprentice = "event.master_no_use_apprentice",
-		BarbarianVolunteer = "event.barbarian_volunteer",
-		BellyDancer = "event.belly_dancer",
-		Deserter = "event.deserter_in_forest",
-		Kingsguard = "event.kings_guard_1",
-		RunawayLabourers = "event.runaway_laborers",
-		LindwormSlayer = "event.crisis.lindwurm_slayer",
-		ThiefCaught = "event.thief_caught",
-		CannonExecution = "event.cannon_execution",
-		MelonThief = "event.melon_thief",
-		TheHorseman = "event.the_horseman"
-	};
 
-	local eventMayGiveBrother = function(currentEventId)
-	{
-		foreach ( key, eventId in brotherEventIds)
-		{
-			if (currentEventId == eventId) {
-				if (eventId == "event.fire_juggler") {
-					//need to check for a juggler in the company for if the bro can even be 'hired'
-				}
 
-				return true;
-			}
-		}
 
-		return false;
-	}
 
-	local playerIsTooCloseToEnemyParty = function()
-	{
-		local parties = this.World.getAllEntitiesAtPos(this.World.State.getPlayer().getPos(), 400.0);
 
-		foreach( party in parties )
-		{
-			if (!party.isAlliedWithPlayer())
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
 
 	// local sortEventsByScore = function (eventList)
 	// {
@@ -106,6 +51,9 @@ foreach (mod in requiredMods) {
 
 	::EventManagerInfo.PrintEventsToLog <- function(printAll, clearLastFiredEvent)
 	{
+		// began moving the following to event_utils...
+
+
 		try {
 			//local eventManager = new("scripts/events/event_manager");
 			local allScores = 0;
@@ -263,22 +211,21 @@ foreach (mod in requiredMods) {
 
 	::EventManagerInfo.DisplayEventsInUI <- function()
 	{
+		::logInfo("Trying to show UI");
 		::EventManagerInfo.EventScreen.show();
 	}
 
-	::EventManagerInfo.Mod.Keybinds.addSQKeybind("PrintEvents", "ctrl+e", ::MSU.Key.State.All, function() {
-		::EventManagerInfo.PrintEventsToLog(true, true);
-		::EventManagerInfo.DisplayEventsInUI();
-	}, "Print events", ::MSU.Key.KeyState.Press);
+	::include("event_manager/file_loading");
 
-	::include("mod_event_manager/event_manager");
-	::include("equal_location_scouting/location");
+	::Hooks.registerJS("ui/mods/event_manager/event_manager_screen.js");
+	::Hooks.registerCSS("ui/mods/event_manager/event_manager_screen.css");
 
-	::Hooks.registerJS("ui/mods/event_manager/event_screen.js");
-	::Hooks.registerCSS("ui/mods/event_manager/event_screen.css");
+	::EventManagerInfo.EventScreen <- ::new("scripts/ui/screens/event_manager_screen");
+	::EventManagerInfo.JSConnection <- ::new("event_manager/event_manager_js_connection");
 
-	::EventManagerInfo.EventScreen <- ::new("scripts/ui/screens/event_screen");
+	::MSU.UI.registerConnection(::EventManagerInfo.JSConnection);
 	::MSU.UI.registerConnection(::EventManagerInfo.EventScreen);
+	::MSU.UI.addOnConnectCallback(::EventManagerInfo.JSConnection.finalize.bindenv(::EventManagerInfo.JSConnection));
 });
 
 // ::mods_queue(::EventManagerInfo.ID, "mod_msu(>=1.2.0)", function()
