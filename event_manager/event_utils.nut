@@ -55,8 +55,6 @@
 
 	function createHumanReadableEventName(eventId)
 	{
-		::logInfo("EventId passed in: " + eventId);
-
 		local readableName = "";
 		local tempName = "No name";
 
@@ -67,24 +65,7 @@
 			tempName = eventId.slice(6);
 		}
 
-		// if (readableName.find("_") == null) {
-
-		// }
-
-		// while (readableName.find("_") != null)
-		// {
-		// 	local firstUnderscore = readableName.find("_");
-		// 	local charactersBeforeFirstUnderscore = readableName.slice()
-		// }
-
-		// if (readableName.find("_") != null) {
-
-		// }
-
 		local words = split(tempName, "_");
-
-		::logInfo("Words split from readableName");
-		::MSU.Log.printData(words);
 
 		foreach(index, word in words) {
 			local firstCharacter = word.slice(0, 1);
@@ -93,17 +74,14 @@
 			readableName += firstCharacter.toupper() + otherCharacters + " ";
 		}
 
-		//remove whitespace from both ends of the string
 		strip(readableName);
-
-		::logInfo("Event name created: " + readableName);
 
 		return readableName;
 	}
 
 	function processEventsAndStoreValues()
 	{
-		::logWarning("Now preparing events values");
+		//::logWarning("Now preparing events values");
 
 		local eventManager = ::World.Events;
 
@@ -150,7 +128,8 @@
 						id = allEvents[i].getID(),
 						name = createHumanReadableEventName(allEvents[i].getID()),
 						onCooldownUntilDay = ::MSU.Math.roundToDec( cooldownUntil, 4 )
-						firedOnDay = firedOn
+						firedOnDay = firedOn,
+						mayGiveBrother = eventMayGiveBrother(allEvents[i].getID())
 					});
 			}
 
@@ -162,10 +141,12 @@
 						id = allEvents[i].getID(),
 						name = createHumanReadableEventName(allEvents[i].getID()),
 						score = eventScore,
-						cooldown = eventCooldown
+						cooldown = eventCooldown,
+						mayGiveBrother = false
 					};
 
 				if (eventMayGiveBrother(allEvents[i].getID())) {
+					eventToAdd.mayGiveBrother = true;
 					this.m.BroHireEventsInPool.append(eventToAdd);
 					this.m.EventBroHireScore += eventScore;
 				}
@@ -176,8 +157,8 @@
 			}
 		}
 
-		::logWarning("Completed processing events");
-		::MSU.Log.printData(this.m);
+		// ::logWarning("Completed processing events");
+		// ::MSU.Log.printData(this.m);
 	}
 
 	function getAllEventsInQueue()

@@ -2,14 +2,43 @@
 var EventManagerScreen = function (_parent)
 {
 	MSUUIScreen.call(this);
-	//this.mEventListener = null;
 	this.mContainer = null;
-	this.mContentContainer = null;
-	this.mContentScrollContainer = null;
-	//this.mPopupDialog = null;
-	this.mEventList = null;
+	this.mEventPoolContainer = null;
+	this.mEventPoolScrollContainer = null;
+	this.mEventCooldownContainer = null;
+	this.mEventCooldownScrollContainer = null;
+	this.mEventData = null;
 	this.mID = "EventManagerScreen";
 };
+
+/*
+	{
+		BroHireEventsInPool = [{
+			id = "",
+			name = "",
+			score = 0,
+			cooldown = 0,
+			mayGiveBrother = true
+		}],
+		NonBroHireEventsInPool = [{
+			id = "",
+			name = "",
+			score = 0,
+			cooldown = 0,
+			mayGiveBrother = false
+		}],
+		EventsOnCooldown = [{
+			id = "",
+			name = "",
+			onCooldownUntilDay = 0,
+			firedOnDay = 0
+			mayGiveBrother = false
+		}],
+		AllScores = 0,
+		NonEventBroHireScore = 0,
+		EventBroHireScore = 0
+	};
+*/
 
 EventManagerScreen.prototype = Object.create(MSUUIScreen.prototype);
 Object.defineProperty(EventManagerScreen.prototype, 'constructor', {
@@ -30,7 +59,6 @@ EventManagerScreen.prototype.show = function (_data)
 		//this.initScrollContainer();
 		this.createContent(_data);
 	}
-		
 
 	var self = this;
 	var moveTo = { opacity: 1};
@@ -81,18 +109,38 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 {
 	var self = this;
 	
-	this.mContainer = $("<div class='emi-overview-screen'/>")
+	this.mContainer = $("<div class='emi-screen'/>")
 		.appendTo(_parentDiv)
 		.hide();
-	$('<div class="emi-overview-title title-font-very-big font-bold font-color-title">Events in the Queue</div>')
+	
+	$('<div class="emi-title title-font-very-big font-bold font-color-title">Events in the Queue</div>')
 		.appendTo(this.mContainer);
+	
+	this.mPageTabContainer = $('<div class="emi-tab-button-bar"/>');
+	this.mContainer.append(this.mPageTabContainer);
 
-	this.mContentContainer  = $('<div class="emi-overview-content-container"/>');
-	this.mContainer.append(this.mContentContainer);
+	var layout = $('<div class="emi-tab-button"/>');
+	this.mPageTabContainer.append(layout);
+	var eventsInQueueButton = layout.createTabTextButton('Active Queue', function () 
+	{
+		self.switchToEventsInPoolPanel();
+	}, null, 'tab-button', 7);
+
+	layout = $('<div class="emi-tab-button"/>');
+	this.mPageTabContainer.append(layout);
+	var eventsOnCooldownButton = layout.createTabTextButton('Events On Cooldown', function () 
+	{
+		self.switchToEventsOnCooldownPanel();
+	}, null, 'tab-button', 7);
+
+	this.mEventPoolContainer  = $('<div class="emi-content-container"/>');
+	this.mContainer.append(this.mEventPoolContainer);
+
+
 
 	this.initScrollContainer();
 
-	this.mContentContainer.aciScrollBar({
+	this.mEventPoolContainer.aciScrollBar({
 	         delta: 2,
 	         lineDelay: 0,
 	         lineTimer: 0,
@@ -117,24 +165,29 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 
 EventManagerScreen.prototype.initScrollContainer = function ()
 {
-	this.mContentScrollContainer = $('<div class="emi-scroll-container"/>')
-	.appendTo(this.mContentContainer);
+	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container"/>')
+	.appendTo(this.mEventPoolContainer);
 }
 
 EventManagerScreen.prototype.createContent = function(_data)
 {
 	var self = this;
-	this.mEventList = _data;
+	this.mEventData = _data;
 
-	if (this.mContentScrollContainer.children().length > 0) {
-		this.mContentScrollContainer.empty();
+	if (this.mEventPoolScrollContainer.children().length > 0) {
+		this.mEventPoolScrollContainer.empty();
 	}
 
-	$.each(this.mEventList, function(_, _eventData)
-	{
+	var eventList = this.mEventData.BroHireEventsInPool.concat(this.mEventData.NonBroHireEventsInPool);
+
+	// eventList.sort((a, b) => {
+	// 	return a.name.localeCompare(b.name);
+	// });
+
+	$.each(eventList, function (_, _eventData) {
 		var collectionDiv = self.createEventSection(_eventData);
-		self.mContentScrollContainer.append(collectionDiv)
-	})
+		self.mEventPoolScrollContainer.append(collectionDiv)
+	});
 }
 
 EventManagerScreen.prototype.createEventSection = function(_eventData)
@@ -179,6 +232,16 @@ EventManagerScreen.prototype.destroyDIV = function ()
 EventManagerScreen.prototype.onLeaveButtonPressed = function()
 {
 	this.hide();
+}
+
+EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function () 
+{
+	
+}
+
+EventManagerScreen.prototype.switchToEventsInPoolPanel = function ()
+{
+	
 }
 
 // EventManagerScreen.prototype.bindTooltips = function ()

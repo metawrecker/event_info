@@ -1,4 +1,4 @@
-.emi-overview-screen
+.emi-screen
 {
 	top: 0;
 	left: 0;
@@ -15,17 +15,35 @@
 	border: 5px solid transparent;
 	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill / 1rem / 2rem stretch;
 }
-.emi-overview-title
+.emi-title
 {
 	display:flex;
 	justify-content: center;
 	padding-top: 1rem;
 }
-.emi-overview-content-container
+.emi-content-container
 {
-	flex:1;
+	flex: 1;
 	width: 100%;
 	overflow: auto
+}
+.emi-tab-button-bar
+{
+	height: 4.3rem;
+	width: 100%;
+	background-color: aquamarine;
+	display: inline-flex;
+	flex-direction: row;
+	margin-top: 10;
+	margin-bottom: 10;
+	text-align: center;
+}
+.emi-tab-button
+{
+	min-width: 17.4rem;
+	height: 4.3rem;
+	margin-right: 0.66rem;
+	line-height: 3.0rem;
 }
 .emi-scroll-container
 {
@@ -34,24 +52,22 @@
 .emi-event-container
 {
 	display:flex;
-	flex-direction: column;
+	flex-direction: row;
 	padding-top: 1rem;
 	padding-bottom: 1rem;
-	margin: 10px;
+	margin: 15px;
 	border: 10px solid transparent;
 	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill stretch;
 }
 .emi-event-item-name
 {
 	width:70%;
-	display:flex;
 	justify-content: start;
 	margin-bottom: 3px;
 }
 .emi-event-item-score
 {
 	width: 20%;
-	display: flex;
 	margin-bottom: 3px;
 }
 /* .emi-overview-perks-row

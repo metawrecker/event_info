@@ -1,7 +1,6 @@
 this.event_manager_screen <- ::inherit("scripts/mods/msu/ui_screen", {
 	m = {
-		ID = "EventManagerScreen",
-		UIVisible = false
+		ID = "EventManagerScreen"
 	},
 
 	function create()
@@ -10,14 +9,29 @@ this.event_manager_screen <- ::inherit("scripts/mods/msu/ui_screen", {
 
 	function getUIData()
 	{
-		local ret = [];
-
 		::EventManagerInfo.Events.processEventsAndStoreValues();
-		local allEvents = ::EventManagerInfo.Events.getAllEventsInQueue();
 
-		ret.extend(allEvents);
+		local ret = {
+			BroHireEventsInPool = [],
+			NonBroHireEventsInPool = [],
+			EventsOnCooldown = [],
+			AllScores = 0,
+			NonEventBroHireScore = 0,
+			EventBroHireScore = 0
+		};
 
-		::logWarning("GetUIData got the following: ");
+		ret.BroHireEventsInPool = ::EventManagerInfo.Events.getBroHiringEventsInQueue();
+		ret.NonBroHireEventsInPool = ::EventManagerInfo.Events.getNonBroHiringEventsInQueue();
+		ret.EventsOnCooldown = ::EventManagerInfo.Events.getEventsOnCooldown();
+		ret.AllScores = ::EventManagerInfo.Events.getAllEventScore();
+		ret.NonEventBroHireScore = ::EventManagerInfo.Events.getNonEventBroHiringScore();
+		ret.EventBroHireScore = ::EventManagerInfo.Events.getEventBroHiringScore();
+
+		// local allEvents = ::EventManagerInfo.Events.getAllEventsInQueue();
+
+		// ret.extend(allEvents);
+
+		::logWarning("GetUIData got the following data: ");
 		::MSU.Log.printData(ret);
 
 		return ret;
@@ -25,15 +39,18 @@ this.event_manager_screen <- ::inherit("scripts/mods/msu/ui_screen", {
 
 	function show()
 	{
-		if (this.m.UIVisible)
-			return;
-
 		try {
-			this.ui_screen.show(this.getUIData());
-			this.m.UIVisible = true;
+			if (this.isVisible()) {
+				return;
+			}
+
+			local data = this.getUIData();
+
+			this.ui_screen.show(null);
+			//this.m.UIVisible = true;
 		} catch (exception){
 			::logError("Error while showing Events UI window. " + exception);
-			this.m.UIVisible = false;
+			//this.m.UIVisible = false;
 		}
 	}
 });
