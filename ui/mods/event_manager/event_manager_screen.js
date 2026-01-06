@@ -116,29 +116,16 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 	$('<div class="emi-title title-font-very-big font-bold font-color-title">Events in the Queue</div>')
 		.appendTo(this.mContainer);
 	
-	this.mPageTabContainer = $('<div class="emi-tab-button-bar"/>');
-	this.mContainer.append(this.mPageTabContainer);
-
-	var layout = $('<div class="emi-tab-button"/>');
-	this.mPageTabContainer.append(layout);
-	var eventsInQueueButton = layout.createTabTextButton('Active Queue', function () 
-	{
-		self.switchToEventsInPoolPanel();
-	}, null, 'tab-button', 7);
-
-	layout = $('<div class="emi-tab-button"/>');
-	this.mPageTabContainer.append(layout);
-	var eventsOnCooldownButton = layout.createTabTextButton('Events On Cooldown', function () 
-	{
-		self.switchToEventsOnCooldownPanel();
-	}, null, 'tab-button', 7);
+	// $('<div class="emi-title font-bold font-color-title">Score</div>')
+	// 	.appendTo(this.mContainer);
+	
+	this.createButtonBar();
 
 	this.mEventPoolContainer  = $('<div class="emi-content-container"/>');
 	this.mContainer.append(this.mEventPoolContainer);
 
-
-
-	this.initScrollContainer();
+	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container"/>')
+	.appendTo(this.mEventPoolContainer);
 
 	this.mEventPoolContainer.aciScrollBar({
 	         delta: 2,
@@ -163,11 +150,30 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
     }, this), null, 1);
 };
 
-EventManagerScreen.prototype.initScrollContainer = function ()
+EventManagerScreen.prototype.createButtonBar = function () 
 {
-	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container"/>')
-	.appendTo(this.mEventPoolContainer);
+	this.mPageTabContainer = $('<div class="emi-tab-button-bar"/>');
+	this.mContainer.append(this.mPageTabContainer);
+
+	var layout = $('<div class="emi-tab-button"/>');
+	this.mPageTabContainer.append(layout);
+	var eventsInQueueButton = layout.createTabTextButton('Active Queue', function () 
+	{
+		self.switchToEventsInPoolPanel();
+	}, null, 'tab-button', 7);
+
+	layout = $('<div class="emi-tab-button"/>');
+	this.mPageTabContainer.append(layout);
+	var eventsOnCooldownButton = layout.createTabTextButton('Events On Cooldown', function () 
+	{
+		self.switchToEventsOnCooldownPanel();
+	}, null, 'tab-button', 7);
 }
+
+// EventManagerScreen.prototype.initScrollContainer = function ()
+// {
+
+// }
 
 EventManagerScreen.prototype.createContent = function(_data)
 {

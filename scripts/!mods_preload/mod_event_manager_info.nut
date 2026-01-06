@@ -34,9 +34,9 @@ foreach (mod in requiredMods) {
 	::Hooks.registerCSS("ui/mods/event_manager/event_manager_screen.css");
 
 	::EventManagerInfo.EventScreen <- ::new("scripts/ui/screens/event_manager_screen");
-	::EventManagerInfo.JSConnection <- ::new("event_manager/event_manager_js_connection");
+	//::EventManagerInfo.JSConnection <- ::new("event_manager/event_manager_js_connection");
 
-	::MSU.UI.registerConnection(::EventManagerInfo.JSConnection);
+	//::MSU.UI.registerConnection(::EventManagerInfo.JSConnection);
 	::MSU.UI.registerConnection(::EventManagerInfo.EventScreen);
-	::MSU.UI.addOnConnectCallback(::EventManagerInfo.JSConnection.finalize.bindenv(::EventManagerInfo.JSConnection));
+	//::MSU.UI.addOnConnectCallback(::EventManagerInfo.JSConnection.finalize.bindenv(::EventManagerInfo.JSConnection));
 });
