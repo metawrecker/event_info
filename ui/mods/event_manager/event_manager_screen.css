@@ -29,25 +29,43 @@
 }
 .emi-tab-button-bar
 {
-	height: 4.3rem;
+	height: 4rem;
 	width: 100%;
 	display: inline-flex;
 	flex-direction: row;
 	margin-top: 10;
 	margin-bottom: 10;
 	text-align: center;
+	align-items: center;
+	justify-content: center;
 }
 .emi-tab-button
 {
-	min-width: 17.4rem;
-	height: 4.3rem;
-	margin-right: 0.66rem;
-	line-height: 3.0rem;
-	align-self: center;
+	max-width: 30rem;
+	margin-right: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center; 
+}
+.emi-event-summary
+{
+	height: 3rem;
+	padding: 1rem;
+	margin: 1rem;
+	flex-direction: row;
+}
+.emi-table-header
+{
+	display:flex;
+	height: 2rem;
+	margin-top: 1rem;
+	padding: 1rem;
+	flex-direction: row;
 }
 .emi-scroll-container
 {
-
+	display:flex;
+	flex:1;
 }
 .emi-event-container
 {
@@ -61,13 +79,31 @@
 }
 .emi-event-item-name
 {
-	width: 70%;
+	width: 60%;
 	justify-content: start;
 	margin-bottom: 3px;
 }
 .emi-event-item-score
 {
-	width: 20%;
+	width: 40%;
+	margin-bottom: 3px;
+}
+.emi-cooldown-item-name
+{
+	width:40%;
+	justify-content: start;
+	margin-bottom: 3px;
+}
+.emi-cooldown-item-fired-on
+{
+	width:30%;
+	justify-content: start;
+	margin-bottom: 3px;
+}
+.emi-cooldown-item-cooldown-until-day
+{
+	width:30%;
+	justify-content: start;
 	margin-bottom: 3px;
 }
 /* .emi-overview-perks-row
@@ -112,10 +148,9 @@
 .emi-overview-filter-container
 {
 /*	height:10%;*/
-	width:90%;
+	width:100%;
 	padding: 1rem;
-	justify-self: flex-end;
-
+	/*justify-self: flex-end;*/
 	display: flex;
 	flex-direction: column;
 /*	align-items: center;*/
@@ -163,7 +198,7 @@
 }
 .emi-overview-footer
 {
-	justify-self: flex-end;
+	/*justify-self: flex-end;*/
 	padding-bottom: 2rem;
 
 	display:flex;
@@ -182,4 +217,100 @@
 	position: absolute;
 	right:-4px;
 	bottom: 5rem;
+}
+
+.ui-control.emi-custom-button
+{
+	width: 100%;
+	height: 100%;
+	position: relative;
+
+    background-image: url("coui://gfx/ui/skin/button_ambition_default.png");
+    background-size: 30.0rem 7.1rem;
+	text-shadow: 1px 1px 1px #000;
+
+    color: #dda21f;
+}
+
+.ui-control.emi-custom-button:hover,
+.ui-control.emi-custom-button.is-selected
+{
+    background-image: url("coui://gfx/ui/skin/button_ambition_hovered.png");
+    background-size: 30.0rem 7.1rem;
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-button.is-selected
+{
+    text-shadow: 1px 1px #A36426, -1px -1px #000;
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-button.is-active
+{
+    background-image: url("coui://gfx/ui/skin/button_ambition_hovered.png");
+    background-size: 30.0rem 7.1rem;
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-button[disabled]
+{
+	color : #a7a7a7;
+    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
+    background-size: 30.0rem 7.1rem;
+}
+
+.ui-control.emi-custom-button[disabled]:hover
+{
+    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
+    background-size: 30.0rem 7.1rem;
+}
+
+.ui-control.emi-custom-button[disabled]:active
+{
+    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
+    background-size: 30.0rem 7.1rem;
+}
+
+.ui-control.emi-custom-button > .label
+{
+    top: 0.5rem;
+	bottom: 0;
+	left: 0.3rem;
+	right: 0;
+
+	position: absolute;
+
+    margin-top: 0.4rem;
+	margin-left: 0.4rem;
+	margin-right: 0.4rem;
+	text-align : center;
+
+    overflow: hidden;
+}
+
+.ui-control.emi-custom-button.is-selected > .label
+{
+    top: 0.6rem;
+    left: 0.4rem;
+}
+
+.ui-control.emi-custom-button > img
+{
+    top: 2.0rem;
+    left: 1.0rem;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+}
+
+.ui-control.emi-custom-button[disabled] > img
+{
+    -webkit-filter: grayscale(100%);
+}
+
+.ui-control.emi-custom-button.is-selected > img
+{
+    top: 2.0rem;
+    left: 1.0rem;
 }

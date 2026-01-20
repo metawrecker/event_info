@@ -127,9 +127,9 @@
 				this.m.EventsOnCooldown.append({
 						id = allEvents[i].getID(),
 						name = createHumanReadableEventName(allEvents[i].getID()),
-						onCooldownUntilDay = ::MSU.Math.roundToDec( cooldownUntil, 4 )
 						firedOnDay = firedOn,
-						mayGiveBrother = eventMayGiveBrother(allEvents[i].getID())
+						mayGiveBrother = eventMayGiveBrother(allEvents[i].getID()),
+						onCooldownUntilDay = ::MSU.Math.roundToDec( cooldownUntil, 4 )
 					});
 			}
 
