@@ -73,8 +73,14 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 
 EventManagerScreen.prototype.createHeader = function ()
 {
+	// $('<div class="emi-mod-title-header title-font-very-big font-bold font-color-title">Event Manager Info Beta (v0.9.4)</div>')
+	// 	.appendTo(this.mContainer);
 	$('<div id="emi-header" class="emi-title title-font-very-big font-bold font-color-title">Available Events</div>')
 		.appendTo(this.mContainer);
+
+	// this.mContainer
+	// 	.append(titleBar)
+	// 	.append(sectionBar);
 }
 
 EventManagerScreen.prototype.createButtonBar = function () 
@@ -232,10 +238,13 @@ EventManagerScreen.prototype.createEventPoolContainer = function ()
 	.append($("<div class='emi-event-item-name title-font-big font-bold font-color-brother-name'>Event Name</div>"))
 	.append($("<div class='emi-event-item-score title-font-big font-bold font-color-brother-name'>Score</div>"));
 
-	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container"/>')
+	// var scrollContainer = $('<div class="emi-scroll-container"/>')
+	// this.mEventPoolContainer.append(scrollContainer);
+
+	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container" />')
 	.appendTo(this.mEventPoolContainer);
 
-	this.mEventPoolContainer.aciScrollBar({
+	this.mEventPoolScrollContainer.aciScrollBar({
 	         delta: 2,
 	         lineDelay: 0,
 	         lineTimer: 0,

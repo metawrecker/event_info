@@ -15,6 +15,10 @@
 	border: 5px solid transparent;
 	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill / 1rem / 2rem stretch;
 }
+.emi-mod-title-header
+{
+	justify-content: center;
+}
 .emi-title
 {
 	display:flex;
@@ -25,7 +29,13 @@
 {
 	flex: 1;
 	width: 100%;
-	overflow: auto
+}
+.emi-scroll-container
+{
+	overflow:auto;
+}
+.emi-content-scroll-container
+{
 }
 .emi-tab-button-bar
 {
@@ -56,16 +66,11 @@
 }
 .emi-table-header
 {
-	display:flex;
+	display: flex;
 	height: 2rem;
 	margin-top: 1rem;
 	padding: 1rem;
 	flex-direction: row;
-}
-.emi-scroll-container
-{
-	display:flex;
-	flex:1;
 }
 .emi-event-container
 {
