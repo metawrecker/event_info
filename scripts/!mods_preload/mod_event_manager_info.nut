@@ -4,6 +4,17 @@
 	Version = "0.9.4"
 }
 
+/*
+	To do
+	1. Top buttons need to stay selected
+	2. Make filter work
+	3. Mark events as bro events in some way
+	4. Adjust section borders maybe
+	5. Add logic to filter out non-valid bro events
+	6. Investigate more readable day numbers (especially with rounding!)
+
+*/
+
 local requiredMods = [
 	"vanilla >= 1.5.1-6",
 	"mod_msu >= 1.3.0",
