@@ -165,6 +165,7 @@
 /*	height:10%;*/
 	width:100%;
 	padding: 2rem;
+	padding-left: 5rem;
 	/*justify-self: flex-end;*/
 	display: flex;
 	flex-direction: column;
@@ -234,21 +235,28 @@
 .ui-control.emi-custom-button
 {
 	width: 100%;
-	height: 100%;
+	height: 5.5rem;
 	position: relative;
 
-    background-image: url("coui://gfx/ui/skin/button_ambition_default.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_default.png");
+    background-size: 30.0rem 5.5rem;
 	text-shadow: 1px 1px 1px #000;
 
     color: #dda21f;
 }
 
-.ui-control.emi-custom-button:hover,
+.ui-control.emi-custom-button:hover
+{
+    background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 30.0rem 5.5rem;
+	opacity: .8;
+    color: #f0b121;
+}
+
 .ui-control.emi-custom-button.is-selected
 {
-    background-image: url("coui://gfx/ui/skin/button_ambition_hovered.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 30.0rem 5.5rem;
     color: #f0b121;
 }
 
@@ -260,33 +268,33 @@
 
 .ui-control.emi-custom-button.is-active
 {
-    background-image: url("coui://gfx/ui/skin/button_ambition_hovered.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 30.0rem 5.5rem;
     color: #f0b121;
 }
 
 .ui-control.emi-custom-button[disabled]
 {
 	color : #a7a7a7;
-    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 30.0rem 5.5rem;
 }
 
 .ui-control.emi-custom-button[disabled]:hover
 {
-    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 30.0rem 5.5rem;
 }
 
 .ui-control.emi-custom-button[disabled]:active
 {
-    background-image: url("coui://gfx/ui/skin/button_ambition_inactive.png");
-    background-size: 30.0rem 7.1rem;
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 30.0rem 5.5rem;
 }
 
 .ui-control.emi-custom-button > .label
 {
-    top: 0.5rem;
+    top: .9rem;
 	bottom: 0;
 	left: 0.3rem;
 	right: 0;
@@ -303,7 +311,7 @@
 
 .ui-control.emi-custom-button.is-selected > .label
 {
-    top: 0.6rem;
+    top: 1.0rem;
     left: 0.4rem;
 }
 

@@ -95,12 +95,12 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	this.mPageTabContainer = $('<div class="emi-tab-button-bar"/>');
 	this.mContainer.append(this.mPageTabContainer);
 
-	var eventPoolButton = this.createEmiCustomButton(function(_button) {
-		self.switchToEventsInPoolPanel(_button);
+	var eventPoolButton = this.createEmiCustomButton("Available Events", function(_button) {
+		self.switchToEventsInPoolPanel();
 	}, 'emi-tab-button');
 
-	var eventCooldownButton = this.createEmiCustomButton(function(_button) {
-		self.switchToEventsOnCooldownPanel(_button);
+	var eventCooldownButton = this.createEmiCustomButton("Events on Cooldown", function(_button) {
+		self.switchToEventsOnCooldownPanel();
 	}, 'emi-tab-button');
 
 	// var eventPoolButton = this.mPageTabContainer.createCustomButton(null, function (_button)
@@ -113,12 +113,15 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	// 	self.switchToEventsOnCooldownPanel();
 	// }, 'emi-tab-button', 9);
 
-	eventPoolButton.text("Available Events");
+	//eventPoolButton.text("Available Events");
 	//eventPoolButton.removeClass('button');
-	eventCooldownButton.text("Events on Cooldown");
+	//eventCooldownButton.text("Events on Cooldown");
 	//eventCooldownButton.removeClass('button');
 
-	eventPoolButton.addClass('is-selected');
+	eventPoolButton.addClass('is-active');
+
+	eventPoolButton.attr("id", "emi-event-pool-button");
+	eventCooldownButton.attr("id", "emi-event-cooldown-button");
 
 	this.mPageTabContainer.append(eventPoolButton);
 	this.mPageTabContainer.append(eventCooldownButton);
@@ -151,7 +154,7 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	// }, null, null, 7);
 }
 
-EventManagerScreen.prototype.createEmiCustomButton = function (_callback, _classes) 
+EventManagerScreen.prototype.createEmiCustomButton = function (_text, _callback, _classes) 
 {
 	var result = $('<div class="ui-control emi-custom-button text-font-normal"/>');
 
@@ -169,6 +172,12 @@ EventManagerScreen.prototype.createEmiCustomButton = function (_callback, _class
     // {
     //     result.append(_content);
     // }
+
+	if (_text !== undefined && _text !== null && typeof(_text) === 'string')
+    {
+        var label = $('<span class="label">' + _text + '</span>');
+        result.append(label);
+    }
 
     if (_callback !== undefined && _callback !== null && typeof(_callback) === 'function')
     {
@@ -311,7 +320,7 @@ EventManagerScreen.prototype.createFilterBar = function()
 	var self = this;
     var filterRow = $('<div class="emi-overview-filter-by-name-row"/>')
     	.appendTo(filterContainer);
-    var name = $('<span class="title-font-normal font-color-subtitle">Filter by name</span>')
+    var name = $('<span class="title-font-normal font-color-subtitle">Filter by Event Name</span>')
     	.appendTo(filterRow);
     var filterLayout = $('<div class="emi-overview-filter-bar-container"/>')
         .appendTo(filterRow);
@@ -325,31 +334,37 @@ EventManagerScreen.prototype.createFilterBar = function()
                 currentInput = currentInput.replace("", '');
                 currentInput = currentInput.replace(//g, '');
                 $(this).val(currentInput);
-                // if (currentInput == "")
-                // {
-                //     self.mContentScrollContainer.find(".dpf-l-perk-container").show();
-                //     self.mContentScrollContainer.find(".dpf-overview-perks-row").show();
-                // }
-                // else
-                // {
-                //     self.mContentScrollContainer.find('.dpf-l-perk-container[data-perktype="perk"]').each(function(){
-                //         if ($(this).attr("data-perkname").toLowerCase().search(currentInput) == -1)
-                //         {
-                //             $(this).hide();
-                //         }
-                //         else
-                //         {
-                //             $(this).show();
-                //             $(this).parent().parent().show(); // show perk row otherwise it won't reset
-                //         }
-                //     })
-                //     self.mContentScrollContainer.find(".dpf-overview-perks-row").each(function(){
-                //         var visibleChildren = $(this).find('.dpf-l-perk-container[data-perktype="perk"]:visible');
-                //         if (visibleChildren.length == 0)
-                //             $(this).hide()
-                //         else $(this).show()
-                //     })
-                // }
+
+				if (currentInput == "") 
+				{
+					self.mEventPoolScrollContainer.find(".emi-event-container").show();
+					self.mEventCooldownScrollContainer.find(".emi-event-container").show();
+				}
+				else 
+				{
+					if (self.mEventPoolContainer.is(':visible'))
+					{
+						self.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
+							if ($(this).attr("data-event-name").toLowerCase().search(currentInput) == -1) {
+								$(this).hide();
+							}
+							else {
+								$(this).show();
+							}
+						})
+					}
+					else
+					{
+						self.mEventCooldownScrollContainer.find(".emi-event-container").each(function() {
+							if ($(this).attr("data-event-name").toLowerCase().search(currentInput) == -1) {
+								$(this).hide();
+							}
+							else {
+								$(this).show();
+							}
+						})
+					}
+				}
             })
 }
 
@@ -486,6 +501,11 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 		broChance = (_data.EventBroHireScore / _data.AllScores * 1.0);
 	}
 
+	if (broChance > 0.0) 
+	{
+		broChance * 100;
+	}
+
 	$("#emi-total-score").text("Total Event Score: " + _data.AllScores + "     ");
 	$("#emi-brother-score").text("Brother Event Score: " + _data.EventBroHireScore + " (" + broChance.toFixed(2) + "%)");
 }
@@ -493,6 +513,7 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
 {
 	var eventContainer = $('<div class="emi-event-container"/>')
+		.attr('data-event-name', _eventData.name)
 		.append($("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>"))
 		.append($("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>" + _eventData.score + "</div>"));
 
@@ -513,6 +534,7 @@ EventManagerScreen.prototype.createEventOnCooldownSection = function(_eventData)
 	}
 
 	var eventContainer = $('<div class="emi-event-container"/>')
+		.attr('data-event-name', _eventData.name)
 		.append($("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>"))
 		.append($("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-brother-name'>" + firedOnDay + "</div>"))
 		.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-brother-name'>" + onCooldownUntilDay + "</div>"));
@@ -549,28 +571,40 @@ EventManagerScreen.prototype.onLeaveButtonPressed = function()
 	this.hide();
 }
 
-EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function (_button) 
+EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function () 
 {
-	this.mPageTabContainer.children().removeClass('is-selected');
+	//this.mPageTabContainer.children().removeClass('is-selected');
 
-	_button.addClass("is-selected");
+	$('#emi-event-pool-button').removeClass("is-active");
+	$('#emi-event-cooldown-button').addClass("is-active");
 
-	console.log(_button);
+	//_button.addClass("is-selected");
+
+	//console.log(_button);
 	//this.mHeader = "Events in Queue";
 	//$("#emi-header").text("Events on Cooldown");
+	$('.emi-filter').val("");
+	this.mEventPoolScrollContainer.find(".emi-event-container").show();
+	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
 	$("#emi-event-pool-container").hide();
 	$("#emi-event-pool-header-content").hide();
 	$("#emi-event-cooldown-container").show();
 	$("#emi-event-cooldown-header-content").show();
 }
 
-EventManagerScreen.prototype.switchToEventsInPoolPanel = function (_button)
+EventManagerScreen.prototype.switchToEventsInPoolPanel = function ()
 {
-	this.mPageTabContainer.children().removeClass('is-selected');
+	// this.mPageTabContainer.children().removeClass('is-selected');
 
-	_button.addClass("is-selected");
-
-	console.log(_button);
+	// _button.addClass("is-selected");
+	$('#emi-event-cooldown-button').removeClass("is-active");
+	$('#emi-event-pool-button').addClass("is-active");
+	
+	//need to reset the filter
+	$('.emi-filter').val("");
+	this.mEventPoolScrollContainer.find(".emi-event-container").show();
+	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
+	//console.log(_button);
 	
 	//this.mHeader = "Events on Cooldown";
 	//$("#emi-header").text("Available Events");

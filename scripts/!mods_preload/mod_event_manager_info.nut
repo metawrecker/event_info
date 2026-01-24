@@ -6,14 +6,16 @@
 
 /*
 	To do
-	1. Top buttons need to stay selected
-	2. Make filter work
+	1. Top buttons need to stay selected (done)
+	2. Make filter work (done)
 	3. Mark events as bro events in some way
 	4. Adjust section borders maybe
 	5. Add logic to filter out non-valid bro events
 	6. Investigate more readable day numbers (especially with rounding!)
 	7. Add checkbox to highlight or show only bro events in both queue and cooldown
 	8. Add logic to process events in the cooldown list
+	9. Fix grid header and content alignment
+	10. Fix button to align center (done??)
 
 */
 
