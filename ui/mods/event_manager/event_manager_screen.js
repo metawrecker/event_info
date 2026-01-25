@@ -6,10 +6,13 @@ var EventManagerScreen = function (_parent)
 	this.mEventPoolHeaderContent = null;
 	this.mEventPoolContainer = null;
 	this.mEventPoolScrollContainer = null;
+	this.mEventPoolMessage = null;
 	this.mEventCooldownHeaderContent = null;
 	this.mEventCooldownContainer = null;
 	this.mEventCooldownScrollContainer = null;
+	this.mEventCooldownMessage = null;
 	this.mEventData = null;
+	this.mNameFilterInput = null;
 	//this.mTotalScore = 0;
 	this.mID = "EventManagerScreen";
 	//this.mHeader = "Events in Queue";
@@ -92,16 +95,16 @@ EventManagerScreen.prototype.createHeader = function ()
 EventManagerScreen.prototype.createButtonBar = function () 
 {
 	var self = this
-	this.mPageTabContainer = $('<div class="emi-tab-button-bar"/>');
+	this.mPageTabContainer = $('<div class="emi-header-button-bar"/>');
 	this.mContainer.append(this.mPageTabContainer);
 
-	var eventPoolButton = this.createEmiCustomButton("Available Events", function(_button) {
+	var eventPoolButton = this.createCustomEmiHeaderButton("Available Events", function(_button) {
 		self.switchToEventsInPoolPanel();
-	}, 'emi-tab-button');
+	}, 'emi-header-button');
 
-	var eventCooldownButton = this.createEmiCustomButton("Events on Cooldown", function(_button) {
+	var eventCooldownButton = this.createCustomEmiHeaderButton("Events on Cooldown", function(_button) {
 		self.switchToEventsOnCooldownPanel();
-	}, 'emi-tab-button');
+	}, 'emi-header-button');
 
 	// var eventPoolButton = this.mPageTabContainer.createCustomButton(null, function (_button)
 	// {
@@ -127,6 +130,8 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	this.mPageTabContainer.append(eventCooldownButton);
 
 
+	
+
 	// var layout = $('<div class="emi-tab-button"/>');
 	// this.mPageTabContainer.append(layout);
 
@@ -144,6 +149,8 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	// 	self.switchToEventsInPoolPanel();
 	// }, null, null, 7);
 
+
+
 	// eventsInQueueButton.click();
 
 	// layout = $('<div class="emi-tab-button"/>');
@@ -154,9 +161,9 @@ EventManagerScreen.prototype.createButtonBar = function ()
 	// }, null, null, 7);
 }
 
-EventManagerScreen.prototype.createEmiCustomButton = function (_text, _callback, _classes) 
+EventManagerScreen.prototype.createCustomEmiHeaderButton = function (_text, _callback, _classes) 
 {
-	var result = $('<div class="ui-control emi-custom-button text-font-normal"/>');
+	var result = $('<div class="ui-control emi-custom-header-button text-font-normal"/>');
 
     // if (_size === undefined)
     //     result = $('<div class="ui-control button text-font-normal"/>');
@@ -232,6 +239,51 @@ EventManagerScreen.prototype.createEmiCustomButton = function (_text, _callback,
     return result;
 }
 
+EventManagerScreen.prototype.createCustomTabButton = function(_text, _callback, _classes)
+{
+	var result = $('<div class="ui-control emi-custom-tab-button text-font-normal"/>');
+
+	if (_classes !== undefined && _classes !== null && typeof(_classes) === 'string')
+    {
+        result.addClass(_classes);
+    }
+
+    if (_text !== undefined && _text !== null && typeof(_text) === 'string')
+    {
+        var label = $('<span class="label">' + _text + '</span>');
+        result.append(label);
+    }
+
+    if (_callback !== undefined && _callback !== null && typeof(_callback) === 'function')
+    {
+    	result.click(function (_event)
+    	{
+            // var disabled = $(this).attr('disabled');
+            // if (disabled !== null && disabled !== 'disabled') {
+            //     var groupName = $(this).data('group');
+            //     if (groupName !== null && typeof(groupName) === 'string')
+            //     {
+            //         var siblings = $(this).parent().parent().find('div[id^=' + groupName + '_]');
+            //         if (siblings.length > 0) {
+            //             siblings.each(function(index, element) {
+            //                 var sibling = $(element);
+            //                 sibling.removeClass('is-selected');
+            //             });
+            //         }
+            //     }
+
+            //     $(this).addClass('is-selected');
+
+                
+            // }
+
+			_callback($(this));
+        });
+    }
+
+	return result;
+}
+
 EventManagerScreen.prototype.createTableHeaderSpaceForEventPoolContainer = function ()
 {
 	this.mEventPoolHeaderContent = $('<div id="emi-event-pool-header-content" class="emi-content-header"/>')
@@ -250,8 +302,8 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventPoolContainer = funct
 	this.mEventPoolHeaderContent.append(tableHeader);
 
 	tableHeader
-	.append($("<div class='emi-event-item-name title-font-big font-bold font-color-brother-name'>Event Name</div>"))
-	.append($("<div class='emi-event-item-score title-font-big font-bold font-color-brother-name'>Score</div>"));
+	.append($("<div class='emi-event-item-name title-font-big font-bold font-color-subtitle'>Event Name</div>"))
+	.append($("<div class='emi-event-item-score title-font-big font-bold font-color-subtitle'>Score</div>"));
 }
 
 EventManagerScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = function ()
@@ -267,15 +319,22 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = f
 	this.mEventCooldownHeaderContent.append(tableHeader);
 
 	tableHeader
-	.append($("<div class='emi-cooldown-item-name title-font-big font-bold font-color-brother-name'>Event Name</div>"))
-	.append($("<div class='emi-cooldown-item-fired-on title-font-big font-bold font-color-brother-name'>Fired on Day</div>"))
-	.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-big font-bold font-color-brother-name'>Available On Day</div>"));
+	.append($("<div class='emi-cooldown-item-name title-font-big font-bold font-color-subtitle'>Event Name</div>"))
+	.append($("<div class='emi-cooldown-item-fired-on title-font-big font-bold font-color-subtitle'>Fired on Day</div>"))
+	.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-big font-bold font-color-subtitle'>Available On Day</div>"));
 }
 
 EventManagerScreen.prototype.createEventPoolContainer = function ()
 {
 	this.mEventPoolContainer = $('<div id="emi-event-pool-container" class="emi-content-container"/>');
 	this.mContainer.append(this.mEventPoolContainer);
+
+	// this.mEventPoolMessage = $('<span>No events in the pool</span>')
+	// .appendTo(this.mEventPoolContainer);
+
+	this.mEventPoolMessage = $('<span class="emi-content-message title-font-big font-bold font-color-subtitle">No events in the pool</span>')
+	.hide();
+	this.mEventPoolContainer.append(this.mEventPoolMessage);
 
 	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container" />')
 	.appendTo(this.mEventPoolContainer);
@@ -297,6 +356,10 @@ EventManagerScreen.prototype.createEventCooldownContainer = function ()
 	this.mEventCooldownContainer = $('<div id="emi-event-cooldown-container" class="emi-content-container"/>')
 		.hide();
 	this.mContainer.append(this.mEventCooldownContainer);
+
+	this.mEventCooldownMessage = $('<span class="emi-content-message title-font-big font-bold font-color-subtitle">No events on cooldown</span>')
+		.hide();
+	this.mEventCooldownContainer.append(this.mEventCooldownMessage);
 
 	this.mEventCooldownScrollContainer = $('<div class="emi-scroll-container"/>')
 	.appendTo(this.mEventCooldownContainer);
@@ -335,37 +398,53 @@ EventManagerScreen.prototype.createFilterBar = function()
                 currentInput = currentInput.replace(//g, '');
                 $(this).val(currentInput);
 
-				if (currentInput == "") 
-				{
-					self.mEventPoolScrollContainer.find(".emi-event-container").show();
-					self.mEventCooldownScrollContainer.find(".emi-event-container").show();
-				}
-				else 
-				{
-					if (self.mEventPoolContainer.is(':visible'))
-					{
-						self.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
-							if ($(this).attr("data-event-name").toLowerCase().search(currentInput) == -1) {
-								$(this).hide();
-							}
-							else {
-								$(this).show();
-							}
-						})
-					}
-					else
-					{
-						self.mEventCooldownScrollContainer.find(".emi-event-container").each(function() {
-							if ($(this).attr("data-event-name").toLowerCase().search(currentInput) == -1) {
-								$(this).hide();
-							}
-							else {
-								$(this).show();
-							}
-						})
-					}
-				}
-            })
+				self.filterEvents(currentInput);
+            });
+	
+	// var layout = $('<div />');
+	// filterRow.append(layout);
+	// var button = filterRow.createTabTextButton("Reset Filter", function ()
+	// {
+	// 	self.filterEvents("");
+	// }, null, 'tab-button', 7);
+
+	// var layout = $('<div class="emi-filter-tab-button"/>');
+	// filterRow.append(layout);
+	// var button = layout.createTabTextButton("Reset", function ()
+	// {
+	// 	self.filterEvents("");
+	// }, null, 'emi-filter-button', 7);
+
+	// var resetButton = filterRow.createTabTextButton("Reset", function() {
+	// 	self.filterEvents("");
+	// }, null, 'emi-filter-button', 7);
+
+	// var resetButton = this.createEmiCustomButton("Reset", function() {
+	// 	self.filterEvents();
+	// },null,'emi-filter-button');
+
+	// filterRow.append(resetButton);
+
+	// var layout = $('<div class="l-ok-button"/>');
+	// filterRow.append(layout);
+	// layout.createTextButton("Reset", function ()
+	// {
+	// 	self.filterEvents("");
+	// }, 'main-reset-button', 1);
+
+
+	// var layout = $('<div class="emi-filter-tab-wrapper"/>');
+	// filterRow.append(layout);
+	// var button = layout.createTabTextButton("Reset", function ()
+	// {
+	// 	self.filterEvents("");
+	// }, null, 'emi-filter-tab-button', 7);
+
+	var resetFilterButton = this.createCustomTabButton("Reset", function() {
+		self.filterEvents("");
+	}, 'emi-tab-button');
+
+	filterRow.append(resetFilterButton);
 }
 
 EventManagerScreen.prototype.createFooter = function ()
@@ -463,6 +542,12 @@ EventManagerScreen.prototype.populateEventsContainer = function(_data)
 
 	var eventList = this.mEventData.BroHireEventsInPool.concat(this.mEventData.NonBroHireEventsInPool);
 
+	if (eventList.length === 0) 
+	{
+		this.showMessage(this.mEventPoolContainer, "No available events");
+		return;
+	}
+
 	eventList.sort(function (a, b) {
 		return a.name.localeCompare(b.name);
 	});
@@ -479,6 +564,12 @@ EventManagerScreen.prototype.populateEventCooldownContainer = function(_data)
 
 	if (this.mEventCooldownScrollContainer.children().length > 0) {
 		this.mEventCooldownScrollContainer.empty();
+	}
+
+	if (this.mEventData.EventsOnCooldown.length === 0) 
+	{
+		this.showMessage(this.mEventCooldownContainer, "No events on cooldown");
+		return;
 	}
 
 	var eventList = this.mEventData.EventsOnCooldown;
@@ -498,12 +589,7 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 	var broChance = 1.0;
 
 	if (_data.AllScores > 0) {
-		broChance = (_data.EventBroHireScore / _data.AllScores * 1.0);
-	}
-
-	if (broChance > 0.0) 
-	{
-		broChance * 100;
+		broChance = (_data.EventBroHireScore / _data.AllScores * 1.0 * 100.0);
 	}
 
 	$("#emi-total-score").text("Total Event Score: " + _data.AllScores + "     ");
@@ -514,8 +600,8 @@ EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
 {
 	var eventContainer = $('<div class="emi-event-container"/>')
 		.attr('data-event-name', _eventData.name)
-		.append($("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>"))
-		.append($("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>" + _eventData.score + "</div>"));
+		.append($("<div class='emi-event-item-name title-font-normal font-bold font-color-subtitle'>" + _eventData.name + "</div>"))
+		.append($("<div class='emi-event-item-score title-font-normal font-bold font-color-subtitle'>" + _eventData.score + "</div>"));
 
 	return eventContainer;
 }
@@ -535,10 +621,33 @@ EventManagerScreen.prototype.createEventOnCooldownSection = function(_eventData)
 
 	var eventContainer = $('<div class="emi-event-container"/>')
 		.attr('data-event-name', _eventData.name)
-		.append($("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>"))
-		.append($("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-brother-name'>" + firedOnDay + "</div>"))
-		.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-brother-name'>" + onCooldownUntilDay + "</div>"));
+		.append($("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-subtitle'>" + _eventData.name + "</div>"))
+		.append($("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-subtitle'>" + firedOnDay + "</div>"))
+		.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-subtitle'>" + onCooldownUntilDay + "</div>"));
 	return eventContainer;
+}
+
+EventManagerScreen.prototype.showMessage = function(_container, _message)
+{
+	//this.mEventPoolScrollContainer.find(".emi-event-container").show();
+	//this.mEventPoolScrollContainer.children().length > 0
+
+	_container.find('.emi-content-message')
+		.text(_message)
+		.show();
+
+
+	// if (!_container.find('.emi-event-container').children().length == 0) {
+	// 	 //probs need to 
+	// }
+
+	// if (_container.find('.emi-event-container').is(':visible'))
+}
+
+EventManagerScreen.prototype.hideMessage = function(_container) 
+{
+	_container.find('.emi-content-message')
+		.hide();
 }
 
 // EventManagerScreen.prototype.registerEventListener = function (_listener)
@@ -571,6 +680,77 @@ EventManagerScreen.prototype.onLeaveButtonPressed = function()
 	this.hide();
 }
 
+EventManagerScreen.prototype.filterEvents = function(_text) 
+{
+	var self = this;
+
+	if (_text == "") 
+	{
+		self.mEventPoolScrollContainer.find(".emi-event-container").show();
+		self.mEventCooldownScrollContainer.find(".emi-event-container").show();
+		this.mNameFilterInput.val("");
+
+		// will need to happen at some point but only if there are no data elements
+		if (this.mEventData.BroHireEventsInPool.length > 0 || this.mEventData.NonBroHireEventsInPool.length > 0) {
+			self.hideMessage(self.mEventCooldownContainer);
+		}
+		if (this.mEventData.EventsOnCooldown.length > 0) {
+			self.hideMessage(self.mEventCooldownContainer);
+		}
+	}
+	else 
+	{
+		if (self.mEventPoolContainer.is(':visible'))
+		{
+			if (self.mEventPoolScrollContainer.children().length === 0) {
+				return;
+			}
+
+			self.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
+				if ($(this).attr("data-event-name").toLowerCase().search(_text) == -1) {
+					$(this).hide();
+				}
+				else {
+					$(this).show();
+				}
+			})
+
+			if (!self.mEventPoolScrollContainer.find(".emi-event-container").is(":visible")) 
+			{
+				self.showMessage(self.mEventPoolContainer, "No events found");
+			}
+			else 
+			{
+				self.hideMessage(self.mEventPoolContainer);
+			}
+		}
+		else
+		{
+			if (self.mEventCooldownScrollContainer.children().length === 0) {
+				return;
+			}
+
+			self.mEventCooldownScrollContainer.find(".emi-event-container").each(function() {
+				if ($(this).attr("data-event-name").toLowerCase().search(_text) == -1) {
+					$(this).hide();
+				}
+				else {
+					$(this).show();
+				}
+			})
+
+			if (!self.mEventCooldownScrollContainer.find(".emi-event-container").is(":visible")) 
+			{
+				self.showMessage(self.mEventCooldownContainer, "No events found");
+			}
+			else 
+			{
+				self.hideMessage(self.mEventCooldownContainer);
+			}
+		}
+	}
+}
+
 EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function () 
 {
 	//this.mPageTabContainer.children().removeClass('is-selected');
@@ -583,7 +763,7 @@ EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function ()
 	//console.log(_button);
 	//this.mHeader = "Events in Queue";
 	//$("#emi-header").text("Events on Cooldown");
-	$('.emi-filter').val("");
+	this.mNameFilterInput.val("");
 	this.mEventPoolScrollContainer.find(".emi-event-container").show();
 	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
 	$("#emi-event-pool-container").hide();
@@ -601,7 +781,7 @@ EventManagerScreen.prototype.switchToEventsInPoolPanel = function ()
 	$('#emi-event-pool-button').addClass("is-active");
 	
 	//need to reset the filter
-	$('.emi-filter').val("");
+	this.mNameFilterInput.val("");
 	this.mEventPoolScrollContainer.find(".emi-event-container").show();
 	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
 	//console.log(_button);

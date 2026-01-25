@@ -37,6 +37,12 @@
 	flex: 1;
 	width: 100%;
 	overflow: auto;
+	justify-content: center;
+	align-items: center;
+}
+.emi-content-message
+{
+
 }
 .emi-scroll-container
 {
@@ -45,7 +51,7 @@
 .emi-content-scroll-container
 {
 }
-.emi-tab-button-bar
+.emi-header-button-bar
 {
 	height: 4rem;
 	width: 100%;
@@ -56,7 +62,7 @@
 	align-items: center;
 	justify-content: center;
 }
-.emi-tab-button
+.emi-header-button
 {
 	max-width: 30rem;
 	margin-right: 1rem;
@@ -80,6 +86,8 @@
 	height: 2rem;
 	margin-top: 1rem;
 	padding: 1rem;
+	padding-left: 2.5rem;
+	padding-right: 3rem;
 	flex-direction: row;
 }
 .emi-event-container
@@ -164,6 +172,7 @@
 {
 /*	height:10%;*/
 	width:100%;
+	height:5rem;
 	padding: 2rem;
 	padding-left: 5rem;
 	/*justify-self: flex-end;*/
@@ -182,11 +191,24 @@
 	display: inline-flex;
 	align-items: center;
 }
-
+.emi-filter-tab-wrapper
+{
+	width: 17rem;
+}
+.emi-filter-tab-button
+{
+	width: 17.4rem;
+	height: 3rem;
+	margin-right: 0.66rem;
+	display: inline-block;
+	line-height: 3.0rem;
+}
 .emi-overview-filter-bar-container
 {
     width: 30.0rem;
     height: 4.0rem;
+	margin-top: .6rem;
+	margin-right: 3rem;
     color:black;
 }
 .emi-filter
@@ -223,6 +245,15 @@
 	height:4.3rem;
 	width: 17.5rem;
 }
+.emi-filter-button
+{
+	width: 20rem;
+	height: 4rem;
+	margin-right: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center; 
+}
 .emi-show-overview-screen-container
 {
 	width: 4.5rem;
@@ -232,7 +263,7 @@
 	bottom: 5rem;
 }
 
-.ui-control.emi-custom-button
+.ui-control.emi-custom-header-button
 {
 	width: 100%;
 	height: 5.5rem;
@@ -245,7 +276,7 @@
     color: #dda21f;
 }
 
-.ui-control.emi-custom-button:hover
+.ui-control.emi-custom-header-button:hover
 {
     background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
     background-size: 30.0rem 5.5rem;
@@ -253,46 +284,46 @@
     color: #f0b121;
 }
 
-.ui-control.emi-custom-button.is-selected
+.ui-control.emi-custom-header-button.is-selected
 {
     background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
     background-size: 30.0rem 5.5rem;
     color: #f0b121;
 }
 
-.ui-control.emi-custom-button.is-selected
+.ui-control.emi-custom-header-button.is-selected
 {
     text-shadow: 1px 1px #A36426, -1px -1px #000;
     color: #f0b121;
 }
 
-.ui-control.emi-custom-button.is-active
+.ui-control.emi-custom-header-button.is-active
 {
     background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
     background-size: 30.0rem 5.5rem;
     color: #f0b121;
 }
 
-.ui-control.emi-custom-button[disabled]
+.ui-control.emi-custom-header-button[disabled]
 {
 	color : #a7a7a7;
     background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
     background-size: 30.0rem 5.5rem;
 }
 
-.ui-control.emi-custom-button[disabled]:hover
+.ui-control.emi-custom-header-button[disabled]:hover
 {
     background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
     background-size: 30.0rem 5.5rem;
 }
 
-.ui-control.emi-custom-button[disabled]:active
+.ui-control.emi-custom-header-button[disabled]:active
 {
     background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
     background-size: 30.0rem 5.5rem;
 }
 
-.ui-control.emi-custom-button > .label
+.ui-control.emi-custom-header-button > .label
 {
     top: .9rem;
 	bottom: 0;
@@ -309,13 +340,13 @@
     overflow: hidden;
 }
 
-.ui-control.emi-custom-button.is-selected > .label
+.ui-control.emi-custom-header-button.is-selected > .label
 {
     top: 1.0rem;
     left: 0.4rem;
 }
 
-.ui-control.emi-custom-button > img
+.ui-control.emi-custom-header-button > img
 {
     top: 2.0rem;
     left: 1.0rem;
@@ -324,13 +355,125 @@
     position: absolute;
 }
 
-.ui-control.emi-custom-button[disabled] > img
+.ui-control.emi-custom-header-button[disabled] > img
 {
     -webkit-filter: grayscale(100%);
 }
 
-.ui-control.emi-custom-button.is-selected > img
+.ui-control.emi-custom-header-button.is-selected > img
 {
     top: 2.0rem;
     left: 1.0rem;
+}
+
+.emi-tab-button
+{
+	max-width: 12.1rem;
+	margin-right: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center; 
+}
+
+.ui-control.emi-custom-tab-button
+{
+	width: 100%;
+	height: 100%;
+	position: relative;
+
+    background-image: url("coui://gfx/ui/skin/button_tab_default.png");
+    background-size: 12rem 4.3rem;
+	text-shadow: 1px 1px 1px #000;
+
+    color: #dda21f;
+}
+
+.ui-control.emi-custom-tab-button:hover
+{
+	background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 12rem 4.3rem;
+    color: #f0b121;
+	opacity: .9;
+}
+.ui-control.emi-custom-tab-button.is-selected
+{
+    background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 12rem 4.3rem;
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-tab-button.is-selected
+{
+    /*text-shadow: 1px 1px #A36426, -1px -1px #000;*/
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-tab-button.is-active
+{
+    background-image: url("coui://gfx/ui/skin/button_tab_hovered.png");
+    background-size: 12rem 4.3rem;
+    color: #f0b121;
+}
+
+.ui-control.emi-custom-tab-button[disabled]
+{
+	color : #a7a7a7;
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 12rem 4.3rem;
+}
+
+.ui-control.emi-custom-tab-button[disabled]:hover
+{
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 12rem 4.3rem;
+}
+
+.ui-control.emi-custom-tab-button[disabled]:active
+{
+    background-image: url("coui://gfx/ui/skin/button_tab_inactive.png");
+    background-size: 12rem 4.3rem;
+}
+
+.ui-control.emi-custom-tab-button > .label
+{
+    top: 0;
+	bottom: .9rem;
+	left: 3.7rem;
+	right: 0;
+
+	position: absolute;
+
+    margin-top: 0.4rem;
+	text-align : center;
+
+    overflow: hidden;
+}
+
+.ui-control.emi-custom-tab-button.is-selected > .label
+{
+    top: 0;
+    left: 0;
+}
+
+.ui-control.emi-custom-tab-button > img
+{
+    top: -0.3rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /*width: 80%;
+    height: 80%;*/
+    position: absolute;
+    margin: auto;
+}
+
+.ui-control.emi-custom-tab-button[disabled] > img
+{
+    -webkit-filter: grayscale(100%);
+}
+
+.ui-control.emi-custom-tab-button.is-selected > img
+{
+    top: -0.2rem;
+    left: 0.1rem;
 }
