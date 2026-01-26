@@ -2,9 +2,9 @@ name: Build ZIP and Publish Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
           BASE_NAME="mod_event_manager_info"
           TAG="${GITHUB_REF_NAME}"    # e.g. v1.2.3
           
-          # Example custom filename: my-product-v1.2.3-20251208.zip
+          # Example custom filename: my-product-v1.2.3.zip
           ARCHIVE_NAME="${BASE_NAME}-${TAG}.zip"
           
           echo "archive_name=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
