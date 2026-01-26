@@ -127,9 +127,12 @@
 {
 	display:flex;
 	flex-direction: row;
-	padding-top: 1rem;
-	padding-bottom: 1rem;
-	margin: 15px;
+	padding-top: .5rem;
+	padding-bottom: .5rem;
+	margin-left: 15px;
+	margin-right: 15px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 	border: 10px solid transparent;
 	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill stretch;
 }
