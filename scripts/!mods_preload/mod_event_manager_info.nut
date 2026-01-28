@@ -1,7 +1,8 @@
 ::EventManagerInfo <- {
 	ID = "mod_event_manager_info",
 	Name = "Event Manager Info",
-	Version = "0.9.5"
+	Version = "0.9.6",
+	GitHubUrl = "https://github.com/metawrecker/event_manager_info"
 }
 
 /*
@@ -16,14 +17,20 @@
 	. Fix on cooldown sorting (done)
 	. Mark events as bro events in some way (done)
 	. Add logic to filter out non - valid bro events(done)
-	. Fill in DestroyDIV()
-	. Reset form on hide()
+	. Fill in DestroyDIV() (done)
+	. Reset form on hide() (done)
 
 	. Investigate more readable day numbers (especially with rounding!)
 	. Add logic to process events in the cooldown list
 	. Fix grid header and content alignment
 	. Fix defaulting to hiding 9999 cooldown events not working
 	. Fix show() and hide() not resetting the UI back to first state
+	. Fix Crises events appearing. Instead, obfuscate the crises event text and call it something generic "crises event". Add checkbox and MSU setting to default behavior of displaying or hiding by default
+	. Add MSU settings to connect to checkboxes
+	. Fix Checkboxes not resetting correctly on form hide(). They stay check/non-check but the grid does not update respective to them.
+	. Add icon to events to highlight bro events
+	. Copy UI sections from existing vanilla forms like the retinue page
+	. Make event_utils more efficient by not calling getID() over and over..
 
 */
 
@@ -45,6 +52,9 @@ foreach (mod in requiredMods) {
 ::EventManagerInfo.HooksMod.queue(modLoadOrder, function() {
  	local mod = ::MSU.Class.Mod(::EventManagerInfo.ID, ::EventManagerInfo.Version, ::EventManagerInfo.Name);
 	::EventManagerInfo.Mod <- mod;
+
+	::EventManagerInfo.Mod.Registry.addModSource(::MSU.System.Registry.ModSourceDomain.GitHub, ::EventManagerInfo.GitHubUrl);
+	::EventManagerInfo.Mod.Registry.setUpdateSource(::MSU.System.Registry.ModSourceDomain.GitHub);
 
 	::EventManagerInfo.DisplayEventsInUI <- function()
 	{

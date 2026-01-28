@@ -118,6 +118,12 @@
 		return chance;
 	}
 
+	function isEventForACrises(event)
+	{
+		local eventId = event.getID();
+		return eventId.find("event.crisis.") != null;
+	}
+
 	function processEventsAndStoreValues()
 	{
 		//::logWarning("Now preparing events values");
@@ -182,7 +188,8 @@
 						score = eventScore,
 						cooldown = eventCooldown,
 						mayGiveBrother = false,
-						chanceForBrother = getChanceForBrother(allEvents[i])
+						chanceForBrother = getChanceForBrother(allEvents[i]),
+						isCrisesEvent = isEventForACrises(allEvents[i])
 					};
 
 				if (eventMayGiveBrother(allEvents[i])) {
