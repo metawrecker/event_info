@@ -126,14 +126,75 @@
 
 	function getEventIcon(event)
 	{
+		//local iconPath = 'gfx/ui/icons/unknown_traits.png';
+
+		local currentEventId = event.getID();
+		local multipleBrosPossibleIcon = "ui/icons/round_information/brothers_icon_old.png";
+		local backgroundIconBasePath = "ui/backgrounds/";
+
+		switch (currentEventId) {
+			case "event.volunteers":
+				return multipleBrosPossibleIcon;
+			case "event.anatomist_joins":
+			case "event.anatomist_helps_blighted_guy_1":
+				return backgroundIconBasePath + "background_70.png";
+			case "event.cultist_origin_flock":
+				return backgroundIconBasePath + "background_34.png";
+			case "event.deserter_origin_volunteer":
+				return backgroundIconBasePath + "background_07.png";
+			case "event.lone_wolf_origin_squire":
+				return backgroundIconBasePath + "background_03.png";
+			case "event.pirates":
+				return backgroundIconBasePath + "background_41.png";
+			case "event.oathtaker_joins":
+				return backgroundIconBasePath + "background_69.png";
+			case "event.bastard_assassin":
+				return backgroundIconBasePath + "background_53.png";
+			case "event.retired_gladiator":
+				return backgroundIconBasePath + "background_61.png";
+			case "event.fire_juggler":
+				return backgroundIconBasePath + "background_14.png";
+			case "event.pimp_vs_harlot":
+				return backgroundIconBasePath + "background_56.png";
+			case "event.imprisoned_wildman":
+				return backgroundIconBasePath + "background_31.png";
+			case "event.crisis.holywar_crucified_1":
+				return backgroundIconBasePath + "background_65.png";
+			case "event.crisis.civilwar_deserter":
+				return backgroundIconBasePath + "background_07.png";
+			case "event.master_no_use_apprentice":
+				return backgroundIconBasePath + "background_40.png";
+			case "event.barbarian_volunteer":
+				return backgroundIconBasePath + "background_58.png";
+			case "event.belly_dancer":
+				return backgroundIconBasePath + "background_64.png";
+			case "event.deserter_in_forest":
+				return backgroundIconBasePath + "background_07.png";
+			case "event.kings_guard_1":
+				return backgroundIconBasePath + "background_59.png";
+			case "event.runaway_laborers":
+				return backgroundIconBasePath + multipleBrosPossibleIcon;
+			case "event.crisis.lindwurm_slayer":
+				return backgroundIconBasePath + "background_71.png";
+			case "event.thief_caught":
+				return backgroundIconBasePath + multipleBrosPossibleIcon;
+			case "event.cannon_execution":
+				return backgroundIconBasePath + "background_11.png";
+			case "event.melon_thief":
+				return backgroundIconBasePath + "background_11.png";
+			case "event.the_horseman":
+				return backgroundIconBasePath + "background_32.png";
+			case "event.desert_well":
+				return backgroundIconBasePath + "background_19.png";
+		}
+
+		return "ui/icons/unknown_traits.png";
 		// if one of the brother events.. get that class background photo..
 		// otherwise, use the unknown person icon as a default
 	}
 
 	function processEventsAndStoreValues()
 	{
-		//::logWarning("Now preparing events values");
-
 		local eventManager = ::World.Events;
 
 		this.m.BroHireEventsInPool = [],

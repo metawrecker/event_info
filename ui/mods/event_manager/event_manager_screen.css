@@ -8,18 +8,15 @@
 	right: 0;
 	bottom: 0;
 	width: 102.4rem;
-	height: 76.8rem;
+	height: 75%;
 	position: absolute;
 	margin: auto;
 	z-index: 999;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-    background-image: url("coui://gfx/ui/skin/dialog_background_01.png");
-    background-size: 102.4rem 76.8rem;
-    background-repeat: no-repeat;
 	border: 5px solid transparent;
-	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill / 1rem / 2rem stretch;
+	border-image: url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill / 1rem / 2rem stretch;
 }
 
 
@@ -30,6 +27,7 @@
 {
 	display:flex;
 	justify-content: center;
+	height: 5rem;
 }
 
 
@@ -130,24 +128,38 @@
 {
 	display:flex;
 	flex-direction: row;
-	padding-top: .5rem;
+	height: 3.3rem;
+	/* padding-top: .5rem;
 	padding-bottom: .5rem;
 	margin-left: 15px;
-	margin-right: 15px;
+	margin-right: 15px; */
 	margin-top: 10px;
 	margin-bottom: 10px;
 	border: 10px solid transparent;
 	border-image:  url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill stretch;
 }
+.emi-event-item-icon-container
+{
+	width: 10%;
+	display: flex;
+	justify-content: center;
+}
+.emi-event-item-icon
+{
+	/* width: 100%; */
+	height: 100%;
+	object-fit: contain;
+	/* padding: 2rem; */
+}
 .emi-event-item-name
 {
-	width: 60%;
+	width: 65%;
 	justify-content: start;
 	margin-bottom: 3px;
 }
 .emi-event-item-score
 {
-	width: 40%;
+	width: 25%;
 	margin-bottom: 3px;
 }
 .emi-cooldown-item-name

@@ -32,7 +32,8 @@ var EventManagerScreen = function (_parent)
 			cooldown = 0,
 			mayGiveBrother = true,
 			chanceForBrother = 0,
-			isCrisesEvent = false
+			isCrisesEvent = false,
+			icon = ""
 		}],
 		NonBroHireEventsInPool = [{
 			id = "",
@@ -41,7 +42,8 @@ var EventManagerScreen = function (_parent)
 			cooldown = 0,
 			mayGiveBrother = false,
 			chanceForBrother = 0,
-			isCrisesEvent = false
+			isCrisesEvent = false,
+			icon = ""
 		}],
 		EventsOnCooldown = [{
 			id = "",
@@ -80,6 +82,7 @@ EventManagerScreen.prototype.show = function (_data)
 		this.populateSummary(_data);
 		this.populateEventsContainer(_data);
 		this.populateEventCooldownContainer(_data);
+		this.toggleObscuringCrisesEvents(true);
 	}
 
 	var self = this;
@@ -220,7 +223,7 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 
 EventManagerScreen.prototype.createHeader = function ()
 {
-	$('<div id="emi-header" class="emi-title title-font-big font-bold font-color-title">Event Manager Info Beta (v0.9.5)</div>')
+	$('<div id="emi-header" class="emi-title title-font-very-big font-bold font-color-title">Event Manager Info Beta (0.9.6)</div>')
 		.appendTo(this.mContainer);
 }
 
@@ -273,13 +276,15 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventPoolContainer = funct
 	});
 
 	this.mHideNonBroEventsCheckbox.on('ifChecked ifUnchecked', null, this, function (_event) {
-		self.toggleShowingNormalEventsInPool(self.mHideNonBroEventsCheckbox.prop('checked') === true);
+		self.filterEvents();
+		//self.toggleShowingNormalEventsInPool(self.mHideNonBroEventsCheckbox.prop('checked') === true);
 	});
 
 	var tableHeader = $('<div class="emi-table-header"/>');
 	this.mEventPoolHeaderContent.append(tableHeader);
 
 	tableHeader
+		.append($("<div class='emi-event-item-icon-container title-font-big font-bold font-color-brother-name'>Icon</div>"))
 		.append($("<div class='emi-event-item-name title-font-big font-bold font-color-brother-name'>Event Name</div>"))
 		.append($("<div class='emi-event-item-score title-font-big font-bold font-color-brother-name'>Score</div>"));
 }
@@ -308,7 +313,8 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = f
 	});
 
 	this.mHide9999CooldownEventsCheckbox.on('ifChecked ifUnchecked', null, this, function (_event) {
-		self.toggleShowing9999CooldownEvents(self.mHide9999CooldownEventsCheckbox.prop('checked') === true);
+		self.filterEvents();
+		//self.toggleShowing9999CooldownEvents(self.mHide9999CooldownEventsCheckbox.prop('checked') === true);
 	});
 
 	var tableHeader = $('<div class="emi-table-header"/>');
@@ -329,7 +335,7 @@ EventManagerScreen.prototype.createEventPoolContainer = function ()
 	.hide();
 	this.mEventPoolContainer.append(this.mEventPoolMessage);
 
-	this.mEventPoolScrollContainer = $('<div class="emi-scroll-container" />')
+	this.mEventPoolScrollContainer = $('<div id="emi-event-pool-scroll-container" class="emi-scroll-container" />')
 	.appendTo(this.mEventPoolContainer);
 
 	this.mVisibleContainer = this.mEventPoolScrollContainer;
@@ -356,7 +362,7 @@ EventManagerScreen.prototype.createEventCooldownContainer = function ()
 		.hide();
 	this.mEventCooldownContainer.append(this.mEventCooldownMessage);
 
-	this.mEventCooldownScrollContainer = $('<div class="emi-scroll-container"/>')
+	this.mEventCooldownScrollContainer = $('<div id="emi-event-cooldown-scroll-container" class="emi-scroll-container"/>')
 	.appendTo(this.mEventCooldownContainer);
 
 	this.mEventCooldownContainer.aciScrollBar({
@@ -499,6 +505,12 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 
 EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
 {
+	var iconField = $("<div class='emi-event-item-icon-container'/>");
+
+	var image = $('<img class="emi-event-item-icon"/>');
+    image.attr('src', Path.GFX + _eventData.icon);
+	iconField.append(image);
+
 	var nameField = $("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>");
 	var scoreField = $("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>" + _eventData.score + "</div>");
 	
@@ -511,6 +523,7 @@ EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
 		.attr('data-event-name', _eventData.name)
 		.attr('is-bro-event', _eventData.mayGiveBrother)
 		.attr('crises-event', _eventData.isCrisesEvent)
+		.append(iconField)
 		.append(nameField)
 		.append(scoreField);
 	
@@ -577,6 +590,8 @@ EventManagerScreen.prototype.switchToEventsInPoolPanel = function ()
 	$("#emi-event-cooldown-header-content").hide();
 	$("#emi-event-pool-container").show();
 	$("#emi-event-pool-header-content").show();
+	
+	this.filterEvents();
 }
 
 EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function () 
@@ -594,6 +609,8 @@ EventManagerScreen.prototype.switchToEventsOnCooldownPanel = function ()
 	$("#emi-event-pool-header-content").hide();
 	$("#emi-event-cooldown-container").show();
 	$("#emi-event-cooldown-header-content").show();
+
+	this.filterEvents();
 }
 ///
 /// End button press functions
@@ -629,8 +646,6 @@ EventManagerScreen.prototype.filterEvents = function()
 		return;
 	}
 
-	//self.mHide9999CooldownEventsCheckbox.prop('checked') === true
-
 	var filterText = "";
 	
 	if (this.mEventFilterText != null) {
@@ -643,30 +658,6 @@ EventManagerScreen.prototype.filterEvents = function()
 	console.log("Filters: " + filterText + " " + showOnlyBroEvents + " " + show9999CooldownEvents);
 	
 	this.mVisibleContainer.find(".emi-event-container").each(function() {
-		// ///take 1
-		// // I think I need to make everything show first - think through this function again with some fresh coffeee..
-		// var showEvent = false;
-
-		// if (this.mEventFilterText !== "" && $(this).attr("data-event-name").toLowerCase().search(_text) >= 0) {
-		// 	showEvent = true;
-		// }
-
-		// if (showEvent && _showOnlyBroEvents && $(this).attr("is-bro-event") === "true") {
-		// 	showEvent = true;
-		// }
-
-		// if (showEvent && _show9999CooldownEvents && parseInt($(this).attr("on-cooldown-until-day")) < 9999) {
-		// 	showEvent = true;
-		// }
-
-		// if (showEvent) {
-		// 	$(this).show();
-		// }
-		// else {
-		// 	$(this).hide();
-		// }
-
-		///take 2
 		$(this).show();
 
 		var hideEvent = false;
@@ -675,14 +666,11 @@ EventManagerScreen.prototype.filterEvents = function()
 			hideEvent = true;
 		}
 
-		// only do this filter if viewing event pool
-		if (!hideEvent && showOnlyBroEvents && $(this).attr("is-bro-event") === "false") {
+		if (self.mVisibleContainer.attr("id") == "emi-event-pool-scroll-container" && !hideEvent && showOnlyBroEvents && $(this).attr("is-bro-event") === "false") {
 			hideEvent = true;
 		}
 
-		// only do this filter when viewing events on cooldown
-		// this filter works opposite I think...
-		if (!hideEvent && show9999CooldownEvents && parseInt($(this).attr("on-cooldown-until-day")) >= 9999) {
+		if (self.mVisibleContainer.attr("id") == "emi-event-cooldown-scroll-container" && !hideEvent && show9999CooldownEvents && parseInt($(this).attr("on-cooldown-until-day")) >= 9999) {
 			hideEvent = true;
 		}
 
@@ -696,125 +684,24 @@ EventManagerScreen.prototype.toggleObscuringCrisesEvents = function(_obscure)
 {
 	var self = this;
 	this.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
-		if (_obscure && $(this).attr("crises-event")) {
+		if (_obscure && $(this).attr("crises-event") == "true") {
 			$(this).find(".emi-event-item-name").text("Crises Event")
 		}
-		else if (!_obscure && $(this).attr("crises-event")) {
+		else if (!_obscure && $(this).attr("crises-event") == "true") {
 			$(this).find(".emi-event-item-name").text($(this).attr("data-event-name"));
 		}
 	})
 }
 
-// EventManagerScreen.prototype.filterEvents = function(_text) 
-// {
-// 	var self = this;
-
-// 	if (_text == "") 
-// 	{
-// 		self.mEventPoolScrollContainer.find(".emi-event-container").show();
-// 		self.mEventCooldownScrollContainer.find(".emi-event-container").show();
-// 		this.mNameFilterInput.val("");
-
-// 		// will need to happen at some point but only if there are no data elements
-// 		if (this.mEventData.BroHireEventsInPool.length > 0 || this.mEventData.NonBroHireEventsInPool.length > 0) {
-// 			self.hideMessage(self.mEventCooldownContainer);
-// 		}
-// 		if (this.mEventData.EventsOnCooldown.length > 0) {
-// 			self.hideMessage(self.mEventCooldownContainer);
-// 		}
-// 	}
-// 	else 
-// 	{
-// 		if (self.mEventPoolContainer.is(':visible'))
-// 		{
-// 			if (self.mEventPoolScrollContainer.children().length === 0) {
-// 				return;
-// 			}
-
-// 			self.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
-// 				if ($(this).attr("data-event-name").toLowerCase().search(_text) == -1) {
-// 					$(this).hide();
-// 				}
-// 				else {
-// 					$(this).show();
-// 				}
-// 			})
-
-// 			if (!self.mEventPoolScrollContainer.find(".emi-event-container").is(":visible")) 
-// 			{
-// 				self.showMessage(self.mEventPoolContainer, "No events found");
-// 			}
-// 			else 
-// 			{
-// 				self.hideMessage(self.mEventPoolContainer);
-// 			}
-// 		}
-// 		else
-// 		{
-// 			if (self.mEventCooldownScrollContainer.children().length === 0) {
-// 				return;
-// 			}
-
-// 			self.mEventCooldownScrollContainer.find(".emi-event-container").each(function() {
-// 				if ($(this).attr("data-event-name").toLowerCase().search(_text) == -1) {
-// 					$(this).hide();
-// 				}
-// 				else {
-// 					$(this).show();
-// 				}
-// 			})
-
-// 			if (!self.mEventCooldownScrollContainer.find(".emi-event-container").is(":visible")) 
-// 			{
-// 				self.showMessage(self.mEventCooldownContainer, "No events found");
-// 			}
-// 			else 
-// 			{
-// 				self.hideMessage(self.mEventCooldownContainer);
-// 			}
-// 		}
-// 	}
-// }
 
 EventManagerScreen.prototype.toggleShowingNormalEventsInPool = function (_hideEvents)
 {
-	this.filterEvents();
-
-	// if (_hideEvents) {
-	// 	this.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
-	// 		console.log("Is bro event? " + $(this).attr("is-bro-event"));
-	// 		if ($(this).attr("is-bro-event") === "true") {
-	// 			$(this).show();
-	// 		}
-	// 		else {
-	// 			$(this).hide();
-	// 		}
-	// 	});
-	// }	
-	// else {
-	// 	this.mEventPoolScrollContainer.find(".emi-event-container").show();			
-	// }	
+	this.filterEvents();	
 }
 
 EventManagerScreen.prototype.toggleShowing9999CooldownEvents = function (_hideEvents) 
 {
 	this.filterEvents();
-	
-	// if (_hideEvents) {
-	// 	this.mEventCooldownScrollContainer.find(".emi-event-container").each(function() {
-	// 		//console.log("On cooldown until day: " + $(this).attr("on-cooldown-until-day"));
-	// 		if (parseInt($(this).attr("on-cooldown-until-day")) >= 9999) {
-	// 			$(this).hide();
-	// 		}
-	// 		else {
-	// 			$(this).show();
-	// 		}
-	// 	});
-	// }
-	// else {
-	// 	//on-cooldown-until-day
-	// 	this.mEventCooldownScrollContainer.find(".emi-event-container").show();	
-	// }
 }
 ///
 /// End utility functions
