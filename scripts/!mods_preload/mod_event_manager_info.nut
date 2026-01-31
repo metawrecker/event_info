@@ -63,4 +63,9 @@ foreach (mod in requiredMods) {
 	::MSU.UI.registerConnection(::EventManagerInfo.EventScreen);
 
 	::include("event_manager/file_loading");
+
+	::EventManagerInfo.HideUI <- function()
+	{
+		::EventManagerInfo.EventScreen.hide();
+	}
 });
