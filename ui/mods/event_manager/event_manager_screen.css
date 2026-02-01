@@ -214,13 +214,30 @@
 }
 .emi-event-item-name
 {
-	width: 77%;
+	width: 62%;
 	justify-content: start;
 }
 .emi-event-item-score
 {
 	width: 15%;
 	justify-content: start;
+}
+.emi-event-item-cooldown
+{
+	width: 15%;
+	justify-content: start;
+}
+.emi-cooldown-item-icon-container
+{
+	width: 8%;
+	display: flex;
+	padding-left: 1rem;
+	justify-content: start;
+}
+.emi-cooldown-item-icon
+{
+	height: 100%;
+	object-fit: contain;
 }
 .emi-cooldown-item-name
 {
@@ -230,12 +247,12 @@
 }
 .emi-cooldown-item-fired-on
 {
-	width:30%;
+	width:26%;
 	justify-content: start;
 }
 .emi-cooldown-item-cooldown-until-day
 {
-	width:30%;
+	width:26%;
 	justify-content: start;
 }
 .brother-highlight

@@ -165,7 +165,7 @@ EventManagerScreen.prototype.createDIV = function (_parentDiv)
 	var dialogLayout = $("<div class='emi-screen-container'/>")
 	this.mContainer.append(dialogLayout);
 
-	this.mDialogContainer = dialogLayout.createDialog('Event Manager Info (0.9.6)', 'View available events and events on cooldown', '', true, 'dialog-1024-768');
+	this.mDialogContainer = dialogLayout.createDialog('Event Manager Info (0.9.7)', 'View available events and events on cooldown', '', true, 'dialog-1024-768');
 
 	this.mPageTabContainer = $('<div class="l-tab-container"/>');
     this.mDialogContainer.findDialogTabContainer().append(this.mPageTabContainer);
@@ -217,6 +217,7 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventPoolContainer = funct
 
 	var chanceForABro = $('<span id="emi-chance-for-a-brother" class="emi-event-summary-content title-font-normal font-color-brother-name">Chance for a brother event ' + 0 + '</span>');
 	summaryContent.append(chanceForABro);
+	chanceForABro.bindTooltip({contentType: 'msu-generic', modId: this.mModId, elementId: "Form.EventBroChance"});
 	
 	this.mHideNonBroEventsCheckbox = $('<input type="checkbox" class="emi-checkbox" id="emi-hide-non-bro-events"/>');
 	summaryContent.append(this.mHideNonBroEventsCheckbox);
@@ -241,7 +242,8 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventPoolContainer = funct
 	tableHeader
 		.append($("<div class='emi-event-item-icon-container title-font-normal font-bold font-color-brother-name'>Icon</div>"))
 		.append($("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>Event Name</div>"))
-		.append($("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>Score</div>"));
+		.append($("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>Score</div>"))
+		.append($("<div class='emi-event-item-cooldown title-font-normal font-bold font-color-brother-name'>Cooldown</div>"));
 }
 
 EventManagerScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = function ()
@@ -275,6 +277,7 @@ EventManagerScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = f
 	this.mEventCooldownHeaderContent.append(tableHeader);
 
 	tableHeader
+		.append($("<div class='emi-cooldown-item-icon-container title-font-normal font-bold font-color-brother-name'>Icon</div>"))
 		.append($("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-brother-name'>Event Name</div>"))
 		.append($("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-brother-name'>Fired on Day</div>"))
 		.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-brother-name'>Available On Day</div>"));
@@ -419,7 +422,7 @@ EventManagerScreen.prototype.populateEventsContainer = function(_data)
 	});
 
 	$.each(eventList, function (_, _eventData) {
-		var collectionDiv = self.createEventInPoolSection(_eventData);
+		var collectionDiv = self.createEventInPoolRow(_eventData);
 		self.mEventPoolScrollContainer.append(collectionDiv);
 	});
 }
@@ -445,7 +448,7 @@ EventManagerScreen.prototype.populateEventCooldownContainer = function(_data)
 	});
 
 	$.each(eventList, function (_, _eventData) {
-		var eventDIv = self.createEventOnCooldownSection(_eventData);
+		var eventDIv = self.createEventOnCooldownRow(_eventData);
 		self.mEventCooldownScrollContainer.append(eventDIv);
 	});
 }
@@ -462,20 +465,27 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 	$("#emi-chance-for-a-brother").text(text);
 }
 
-EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
+EventManagerScreen.prototype.createEventInPoolRow = function(_eventData)
 {
 	var iconField = $("<div class='emi-event-item-icon-container'/>");
-
 	var image = $('<img class="emi-event-item-icon"/>');
     image.attr('src', Path.GFX + _eventData.icon);
 	iconField.append(image);
 
-	var nameField = $("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>" + _eventData.name + "</div>");
+	var eventName = _eventData.name;
+
+	if (_eventData.chanceForBrother < 100) {
+		eventName = eventName + " (" + _eventData.chanceForBrother + "% Chance)";
+	}
+
+	var nameField = $("<div class='emi-event-item-name title-font-normal font-bold font-color-brother-name'>" + eventName + "</div>");
 	var scoreField = $("<div class='emi-event-item-score title-font-normal font-bold font-color-brother-name'>" + _eventData.score + "</div>");
+	var cooldownField = $("<div class='emi-event-item-cooldown title-font-normal font-bold font-color-brother-name'>" + _eventData.cooldown + "</div>");
 	
 	if (_eventData.mayGiveBrother) {
 		nameField.addClass('brother-highlight');
 		scoreField.addClass('brother-highlight');
+		cooldownField.addClass('brother-highlight');
 	}
 
 	var eventContainer = $('<div class="emi-event-container"/>')
@@ -484,15 +494,20 @@ EventManagerScreen.prototype.createEventInPoolSection = function(_eventData)
 		.attr('crises-event', _eventData.isCrisesEvent)
 		.append(iconField)
 		.append(nameField)
-		.append(scoreField);
+		.append(scoreField)
+		.append(cooldownField);
 	
 	return eventContainer;
 }
 
-EventManagerScreen.prototype.createEventOnCooldownSection = function(_eventData)
+EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 {
 	var firedOnDay = 0;
 	var onCooldownUntilDay = 0;
+	var iconField = $("<div class='emi-cooldown-item-icon-container'/>");
+	var image = $('<img class="emi-event-item-icon"/>');
+    image.attr('src', Path.GFX + _eventData.icon);
+	iconField.append(image);
 
 	if (_eventData.firedOnDay !== null && _eventData.firedOnDay >= 0) {
 		firedOnDay = _eventData.firedOnDay.toFixed(2);
@@ -516,6 +531,7 @@ EventManagerScreen.prototype.createEventOnCooldownSection = function(_eventData)
 		.attr('data-event-name', _eventData.name)
 		.attr('is-bro-event', _eventData.isBroEvent)
 		.attr('on-cooldown-until-day', _eventData.onCooldownUntilDay)
+		.append(iconField)
 		.append(nameField)
 		.append(firedOnField)
 		.append(onCooldownField);

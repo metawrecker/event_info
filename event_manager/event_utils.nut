@@ -119,17 +119,14 @@
 
 	function getChanceForBrother(event)
 	{
-		local chance = 100;
-		local currentEventId = event.getID();
-
-		switch (currentEventId) {
+		switch (event.getID()) {
 			case "event.runaway_laborers":
 				return 70;
 			case "event.thief_caught":
 				return 75;
 		}
 
-		return chance;
+		return 100;
 	}
 
 	function isEventForACrises(event)
@@ -184,12 +181,11 @@
 				return backgroundIconBasePath + "background_07.png";
 			case "event.kings_guard_1":
 				return backgroundIconBasePath + "background_59.png";
+			case "event.thief_caught":
 			case "event.runaway_laborers":
-				return backgroundIconBasePath + multipleBrosPossibleIcon;
+				return multipleBrosPossibleIcon;
 			case "event.crisis.lindwurm_slayer":
 				return backgroundIconBasePath + "background_71.png";
-			case "event.thief_caught":
-				return backgroundIconBasePath + multipleBrosPossibleIcon;
 			case "event.cannon_execution":
 				return backgroundIconBasePath + "background_11.png";
 			case "event.melon_thief":
@@ -241,7 +237,7 @@
 			local eventScore = allEvents[i].getScore();
 			local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
 
-			if (eventCooldown > 99999) {
+			if (eventCooldown >= 99999) {
 				eventCooldown = 9999;
 			}
 
@@ -258,7 +254,8 @@
 						name = createHumanReadableEventName(allEvents[i].getID()),
 						firedOnDay = firedOn,
 						mayGiveBrother = eventMayGiveBrother(allEvents[i]),
-						onCooldownUntilDay = ::MSU.Math.roundToDec( cooldownUntil, 4 )
+						onCooldownUntilDay = ::MSU.Math.roundToDec( cooldownUntil, 4 ),
+						icon = getEventIcon(allEvents[i])
 					});
 			}
 
@@ -287,6 +284,8 @@
 					this.m.NonBroHireEventsInPool.append(eventToAdd);
 					this.m.NonEventBroHireScore += eventScore;
 				}
+
+				//::MSU.Log.printData(eventToAdd);
 			}
 		}
 	}

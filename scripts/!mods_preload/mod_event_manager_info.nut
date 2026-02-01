@@ -1,36 +1,25 @@
 ::EventManagerInfo <- {
 	ID = "mod_event_manager_info",
 	Name = "Event Manager Info",
-	Version = "0.9.6",
+	Version = "0.9.7",
 	GitHubUrl = "https://github.com/metawrecker/event_manager_info"
 }
 
 /*
-	(0.9.6)
-	. Reset form on hide()
-	. Fix defaulting to hiding 9999 cooldown events not working
-	. Fix show() and hide() not resetting the UI back to first state
-	. Add MSU settings to connect to checkboxes
-	. Fix Checkboxes not resetting correctly on form hide(). They stay check/non-check but the grid does not update respective to them.
-	. Add icon to events on the Event Pool page
-	. Implement vanilla 'dialog screen' UI
-	. Fix issue where only bro events that qualify appear in the filtered bro event list
-	. Fix grid header and content alignment (somewhat.. it's still not perfect)
-	. Fix Crises events appearing. Instead, obfuscate the crises event text and call it something generic "crises event". Add checkbox and MSU setting to default behavior of displaying or hiding by default
-	. Make world map auto pause when showing UI
-	. Disable any world map interactions when showing UI
-	. Enabled ability to close the UI using same keybind used to open it
-	.	This only works when NOT focusing on the filter box
+	(0.9.7)
+	* Fixed icon for Thief Caught and Runaway Laborors events
+	* Added % chance for event to give bro where applicable (i.e., thief in the night and runaway laborors)
+	* Added Cooldown column on the Event Pool grid
+	* Added Icon to Event Cooldown grid
+	* Added one tooltip to event bro chance text/label
+
 
 	todo
 	. Investigate more readable day numbers (especially with rounding!)
 	. Add logic to process events in the cooldown list
-	. Make event_utils more efficient by not calling getID() over and over..
 	. Create tooltips
-	. Icon on cooldown page??
-	. Fix cooldown page grid UI
-	. Add dog icon to dog events
 	. Fix issue where the filter box arrests attention away from the keybinds
+	. Come up with a new way to highlight that a bro event can give a bro. 
 
 */
 
