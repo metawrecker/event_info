@@ -200,6 +200,10 @@
 {
 	margin-bottom: 0;
 }
+.emi-is-brother-event
+{
+	background: radial-gradient(ellipse at start, rgba(180, 140, 40, 0.35) 0%, rgba(180, 140, 40, 0.1) 50%, transparent 70%) !important;
+}
 .emi-event-item-icon-container
 {
 	width: 8%;
@@ -216,16 +220,19 @@
 {
 	width: 62%;
 	justify-content: start;
+	background: transparent;
 }
 .emi-event-item-score
 {
 	width: 15%;
 	justify-content: start;
+	background: transparent;
 }
 .emi-event-item-cooldown
 {
 	width: 15%;
 	justify-content: start;
+	background: transparent;
 }
 .emi-cooldown-item-icon-container
 {
@@ -255,9 +262,14 @@
 	width:26%;
 	justify-content: start;
 }
+/* .non-brother-highlight
+{
+	color: darkgray !important;
+} */
 .brother-highlight
 {
-	color: green !important;
+	color: #f0b121 !important;
+	/* background: transparent !important; */
 }
 
 

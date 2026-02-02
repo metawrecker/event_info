@@ -266,7 +266,7 @@
 				local eventToAdd = {
 						id = allEvents[i].getID(),
 						name = createHumanReadableEventName(allEvents[i].getID()),
-						score = eventScore,
+						score = ::MSU.Math.roundToDec(eventScore, 2),
 						cooldown = eventCooldown,
 						mayGiveBrother = false,
 						isBroEvent = eventIsBrotherEvent(allEvents[i]),
