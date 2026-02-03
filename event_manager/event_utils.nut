@@ -123,6 +123,7 @@
 			case "event.runaway_laborers":
 				return 70;
 			case "event.thief_caught":
+			case "event.the_horseman":
 				return 75;
 		}
 
@@ -206,9 +207,72 @@
 		// otherwise, use the unknown person icon as a default
 	}
 
+	// function investigateDateTime()
+	// {
+	// 	try {
+	// 		//local event = /* get an event instance */;
+	// 		// local func = this.World.getTime;
+
+	// 		// // Try these:
+	// 		// this.logInfo(typeof func); // Is it just "function" or something more?
+	// 		// this.logInfo(func.tostring()); // Does this reveal anything?
+
+	// 		// local time = this.World.getTime();
+
+	// 		::MSU.Log.printData(this.World.getTime().__getTable);
+
+	// 		::MSU.Log.printData(this.Time);
+	// 	} catch (exception){
+	// 		::logError(exception);
+	// 	}
+	// }
+
+	function convertEventFiredDateToWorldDate(event)
+	{
+		// pretty sure world starts at 1 day 2 hours while getVirtualTimeF starts at 0. Both progress at 105 seconds per day from what I see..
+
+		// manual calculation of adding getVirtualTimeF + 105 (1 day) + 8.75 (2 hours) wasn't right..
+		// BUT it could be a first game of the game launch for 1 day + 10 minutes)
+
+		local currentTime = this.World.getTime();
+
+		::logInfo("VirtualTimeF: " + this.Time.getVirtualTimeF());
+		::logInfo("Seconds Per Day: " + currentTime.SecondsPerDay);
+		::logInfo("Seconds Per Hour: " + currentTime.SecondsPerHour);
+		::logInfo("Seconds Of Day: " + currentTime.SecondsOfDay);
+		::logInfo("Days: " + currentTime.Days);
+		::logInfo("Hours: " + currentTime.Hours);
+		::logInfo("Minutes: " + currentTime.Minutes);
+		::logInfo("Time Of Day: " + currentTime.TimeOfDay);
+		::logInfo("Time String: " + this.Const.Strings.World.TimeOfDay[currentTime.TimeOfDay]);
+
+		local daysCalc = currentTime.Days * 105;
+		local hoursCalc = currentTime.Hours * 4.375;
+		local minutesCalc = currentTime.Minutes * 0.0729166666666667;
+
+		local mapClock = daysCalc + hoursCalc + minutesCalc;
+		local minusVirtualTIme = mapClock - this.Time.getVirtualTimeF();
+
+		::logInfo("DaysCalc: " + daysCalc);
+		::logInfo("HoursCalc: " + hoursCalc);
+		::logInfo("MinutesCalc: " + minutesCalc);
+		::logInfo("MapClock: " + mapClock);
+		::logInfo("Time Diff: " + minusVirtualTIme);
+	}
+
+	function createTimeOfDayDisplay(event)
+	{
+		// I'm thinking once I figure out a way to get the world date from the getVirtualTimeF, I can then draw out the numbers into day, hours, minutes to generate a display value
+
+	}
+
 	function processEventsAndStoreValues()
 	{
 		local eventManager = ::World.Events;
+
+		//investigateDateTime()
+
+		convertEventFiredDateToWorldDate(null);
 
 		this.m.BroHireEventsInPool = [],
 		this.m.NonBroHireEventsInPool = [],
@@ -219,6 +283,9 @@
 
 		local allEvents = eventManager.m.Events;
 		local lastEventId = eventManager.m.LastEventID;
+
+
+
 
 		for(local i = 0; i < allEvents.len(); i = ++i)
 		{
@@ -234,16 +301,17 @@
 				allEvents[i].update();
 			}
 
-			local eventScore = allEvents[i].getScore();
-			local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
-
-			if (eventCooldown >= 99999) {
-				eventCooldown = 9999;
-			}
-
 			if (allEvents[i].getScore() == 0 && allEvents[i].m.CooldownUntil > 0 && !allEvents[i].isSpecial()) {
 				local cooldownUntil = (allEvents[i].m.CooldownUntil / this.World.getTime().SecondsPerDay);
 				local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay);
+
+				local debugObj = {
+					cooldownUntil = allEvents[i].m.CooldownUntil,
+					cooldownUntilCalc = cooldownUntil,
+					firedOn = firedOn
+				};
+
+				::MSU.Log.printData(debugObj);
 
 				if (cooldownUntil > 9999) {
 					cooldownUntil = 9999;
@@ -261,6 +329,13 @@
 
 			if (allEvents[i].getScore() > 0)
 			{
+				local eventScore = allEvents[i].getScore();
+				local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
+
+				if (eventCooldown >= 99999) {
+					eventCooldown = 9999;
+				}
+
 				this.m.AllScores += eventScore;
 
 				local eventToAdd = {
