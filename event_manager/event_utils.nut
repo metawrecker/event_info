@@ -236,41 +236,55 @@
 
 	}
 
-	function determineIfGameSaveWasCreatedFirstOnGameLoad()
+	function setEventTimeWorldMapTimeOffset()
 	{
-		local currentTime = this.World.getTime();
+		local currentTime = this.World.getTime().Time;
 		local virtualTime = this.Time.getVirtualTimeF();
 
-		local daysCalc = currentTime.Days * currentTime.SecondsPerDay;
-		local hoursCalc = currentTime.Hours * currentTime.SecondsPerHour;
-		local minutesCalc = currentTime.Minutes * (currentTime.SecondsPerHour / 60);
-		local mapClock = daysCalc + hoursCalc + minutesCalc;
-		local timeOffset = mapClock - virtualTime;
+		this.m.TimeToAddToMatchWorldClock = currentTime - virtualTime;
 
-		::logInfo("DaysCalc: " + daysCalc);
-		::logInfo("HoursCalc: " + hoursCalc);
-		::logInfo("MinutesCalc: " + minutesCalc);
-		::logInfo("MapClock: " + mapClock);
-		::logInfo("Time Diff: " + timeOffset);
+		::logInfo("Event Time: " + currentTime);
+		::logInfo("Map Time: " + virtualTime);
+		::logInfo("Time Diff: " + this.m.TimeToAddToMatchWorldClock);
 
-		this.m.GameSaveIsFirstGameAfterGameLaunch = timeOffset >= 105 && timeOffset <= 106;
-		this.m.TimeToAddToMatchWorldClock = timeOffset;
+		// local currentTime = this.World.getTime();
+		// local virtualTime = this.Time.getVirtualTimeF();
 
-		::logInfo("Game save is first one after game launch: " + this.m.GameSaveIsFirstGameAfterGameLaunch);
-		::logInfo("Seconds to add to virtual clock to match world clock: " + this.m.TimeToAddToMatchWorldClock)
+		// local daysCalc = currentTime.Days * currentTime.SecondsPerDay;
+		// local hoursCalc = currentTime.Hours * currentTime.SecondsPerHour;
+		// local minutesCalc = currentTime.Minutes * (currentTime.SecondsPerHour / 60);
+		// local mapClock = daysCalc + hoursCalc + minutesCalc;
+		// local timeOffset = mapClock - virtualTime;
 
-		if (timeOffset >= 105 && timeOffset <= 106)
-		{
-			::logInfo("This game is the first campaign after loading the game");
-			return true;
-		}
+		// ::logInfo("Time " + currentTime.Time); // Float = age (days, hours, minutes) of this world in "BB Seconds"
 
-		::logInfo("This game is the second+ campaign after loading the game");
-		return false;
+		// ::logInfo("DaysCalc: " + daysCalc);
+		// ::logInfo("HoursCalc: " + hoursCalc);
+		// ::logInfo("MinutesCalc: " + minutesCalc);
+		// ::logInfo("MapClock: " + mapClock);
+		// ::logInfo("Time Diff: " + timeOffset);
+
+		// this.m.GameSaveIsFirstGameAfterGameLaunch = timeOffset >= 105 && timeOffset <= 106;
+
+
+		// ::logInfo("Game save is first one after game launch: " + this.m.GameSaveIsFirstGameAfterGameLaunch);
+		// ::logInfo("Seconds to add to virtual clock to match world clock: " + this.m.TimeToAddToMatchWorldClock)
+
+		// if (timeOffset >= 105 && timeOffset <= 106)
+		// {
+		// 	::logInfo("This game is the first campaign after loading the game");
+		// 	return true;
+		// }
+
+		// ::logInfo("This game is the second+ campaign after loading the game");
+		// return false;
 	}
 
-	function convertEventFiredDateToWorldDate(event)
+	function getEventCooldownSecondsInWorldClockTime(event)
 	{
+		return event.m.CooldownUntil + this.m.TimeToAddToMatchWorldClock;
+		//return ((event.m.CooldownUntil + this.m.TimeToAddToMatchWorldClock) / this.m.WorldSecondsPerDay);
+		//local firedOn = newCoolDownUntil - (event.m.Cooldown / this.m.WorldSecondsPerDay);
 
 		// pretty sure world starts at 1 day 2 hours while getVirtualTimeF starts at 0. Both progress at 105 seconds per day from what I see..
 
@@ -293,8 +307,7 @@
 		// local oldCooldownUntil = (event.m.CooldownUntil / this.m.WorldSecondsPerDay);
 		// local oldFiredOn = oldCooldownUntil - (event.m.Cooldown / this.m.WorldSecondsPerDay);
 
-		local newCoolDownUntil = ((event.m.CooldownUntil + this.m.TimeToAddToMatchWorldClock) / this.m.WorldSecondsPerDay);
-		local newFiredOn = newCoolDownUntil - (event.m.Cooldown / this.m.WorldSecondsPerDay);
+
 
 		// local logObj = {
 		// 	Name = createHumanReadableEventName(event.getID())
@@ -343,13 +356,163 @@
 
 		//::MSU.Log.printData(logObj);
 
-		return newCoolDownUntil;
+		//return newCoolDownUntil;
 	}
 
-	function createTimeOfDayDisplay(event)
+	function createTimeOfDayDisplay(eventDays)
 	{
+		if (eventDays >= 9999) {
+			return "Day 9999+";
+		}
+
+		local formatString = "%.2f";
+
+		local days = this.Math.floor(eventDays);
+		local partialDay = eventDays % 1;
+		local seconds = partialDay * 105;
+		local hours = this.Math.floor(seconds / 4.375);
+		local minutes = this.Math.floor(hours / 60);
+
+		local timeDisplay = "Day " + days + " ";
+
+		/// I think I'm close on the days/hours/minutes/seconds part. Then need to sync into TimeOfDay for Vanilla and then for Hardened..
+
+		if (hours == 0) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[0]; //" Dawn";
+		}
+		else if (hours == 1 || (hours == 2 && minutes == 0)) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[1]; //Morning;
+		}
+		else if ((hours == 2 && minutes > 1) || (hours > 2 && hours <= 8) || (hours == 9 && minutes == 0)) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[2]; //Midday
+		}
+		else if ((hours == 9 && minutes > 1) || (hours > 9 && hours <= 12) || (hours == 13 && minutes == 0)) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[3]; //Afternoon
+		}
+		else if (hours == 13 && minutes > 1) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[4]; //Evening
+		}
+		else {
+			timeDisplay += hours.tostring();
+		}
+
+		::logInfo("************************************************************");
+		::logInfo("Entry days: " + format(formatString, eventDays));
+		::logInfo("Partial Day: " + format(formatString, partialDay));
+		::logInfo("Days: " + format(formatString, days));
+		::logInfo("Seconds: " + format(formatString, seconds));
+		::logInfo("Hours: " + format(formatString, hours));
+		::logInfo("Minutes: " + format(formatString, minutes));
+		::logInfo("Time Display: " + timeDisplay);
+		::logInfo("************************************************************");
+
+		return timeDisplay;
+
+
+
+
 		// I'm thinking once I figure out a way to get the world date from the getVirtualTimeF, I can then draw out the numbers into day, hours, minutes to generate a display value
 
+		local currentTime = this.World.getTime();
+		local secondsPerDay = currentTime.SecondsPerDay;
+		local secondsPerHour = currentTime.SecondsPerHour;
+		local secondsPerMinute = secondsPerHour / 60;
+		//local secondsRemaining = 0;
+		local timeDisplay = "";
+		local days = 0;
+		local hours = 0;
+		local minutes = 0;
+		local seconds = 0;
+		local formatString = "%.2f";
+
+		::logInfo("************************************************************");
+		::logInfo("Entry Seconds: " + eventTimeSeconds);
+		//::logInfo("Event Name: " + createHumanReadableEventName(event.getID()));
+
+		if (eventTimeSeconds >= secondsPerDay) {
+			days = this.Math.floor(eventTimeSeconds / secondsPerDay);
+			eventTimeSeconds = eventTimeSeconds - (days * secondsPerDay);
+
+			::logInfo("# Days: " + days);
+			::logInfo("Remaining Seconds: " + eventTimeSeconds);
+		}
+
+		if (eventTimeSeconds >= secondsPerHour) {
+			hours = this.Math.floor(eventTimeSeconds / secondsPerHour);
+			eventTimeSeconds = eventTimeSeconds - (hours * secondsPerHour);
+
+			::logInfo("# Hours: " + hours);
+			::logInfo("Remaining Seconds: " + eventTimeSeconds);
+		}
+
+		if (eventTimeSeconds >= secondsPerMinute) {
+			minutes = this.Math.floor(eventTimeSeconds / secondsPerMinute)
+			eventTimeSeconds = eventTimeSeconds - (minutes * secondsPerMinute);
+
+			::logInfo("# Minutes: " + minutes);
+			::logInfo("Remaining Seconds: " + eventTimeSeconds);
+		}
+
+		if (eventTimeSeconds > 0) {
+			::logInfo("# Seconds: " + eventTimeSeconds);
+		}
+
+		// is there an opportunity to hook the getDate() class in such a way that I can use it to my benefit here???
+		//	I'm thinking using setTime() (if it works) and then calling TimeOfTime for each event.
+
+		timeDisplay = "Day " + days + " ";
+
+		if (hours == 0) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[0]; //" Dawn";
+		}
+		else if (hours == 1 || (hours == 2 && minutes == 0)) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[1]; //Morning;
+		}
+		else if ((hours == 2 && minutes > 1) || (hours > 2 && hours <= 8) || (hours == 9 && minutes == 0)) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[2]; //Midday
+		}
+		else if ((hours == 9 && minutes > 1) || (hours > 9 && hours <= 12 || (hours == 13 && minutes == 0))) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[3]; //Afternoon
+		}
+		else if (hours == 13 && minutes > 1) {
+			timeDisplay += this.Const.Strings.World.TimeOfDay[4]; //Evening
+		}
+
+		//Vanilla
+
+		// ::Const.Strings.World.TimeOfDay <- [
+		// "Dawn" - 0,
+		// "Morning"- 1, 2
+		// "Midday" - 2, 3, 4, 5, 6, 7, 8, 9
+		// "Afternoon" - 9, 10, 11, 12, 13
+		// "Evening" - 14,
+		// "Dusk" - 14, 15, 16, 17
+		// "Night" - 17, 18, 19, 20, 21, 22
+		// "Dawn" - 22, 23
+		// ];
+
+		//Hardened:
+
+		// ::Const.Strings.World.TimeOfDay <- [
+		// 	"Morning",
+		// 	"Morning",
+		// 	"Morning",
+		// 	"Midday",
+		// 	"Afternoon",
+		// 	"Afternoon",
+		// 	"Afternoon",
+		// 	"Sunset",
+		// 	"Dusk",
+		// 	"Midnight",
+		// 	"Dawn",
+		// 	"Sunrise",
+		// ];
+
+		::logInfo("Time Display: " + timeDisplay);
+
+		::logInfo("************************************************************");
+
+		return timeDisplay;
 	}
 
 	function processEventsAndStoreValues()
@@ -358,7 +521,7 @@
 
 		investigateDateTime();
 
-		determineIfGameSaveWasCreatedFirstOnGameLoad();
+		setEventTimeWorldMapTimeOffset();
 
 		this.m.BroHireEventsInPool = [],
 		this.m.NonBroHireEventsInPool = [],
@@ -388,29 +551,40 @@
 			}
 
 			if (allEvents[i].getScore() == 0 && allEvents[i].m.CooldownUntil > 0 && !allEvents[i].isSpecial()) {
-				local worldDateConverted = convertEventFiredDateToWorldDate(allEvents[i]);
+				local coolDownSeconds = getEventCooldownSecondsInWorldClockTime(allEvents[i]);
+				local cooldownUntil = coolDownSeconds / this.m.WorldSecondsPerDay;
+				local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.m.WorldSecondsPerDay);
+				// cooldownUntil - (allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay);
 
-				local cooldownUntil = worldDateConverted; // (allEvents[i].m.CooldownUntil / this.World.getTime().SecondsPerDay);
-				local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay);
+				::logWarning("Event Name: " + createHumanReadableEventName(allEvents[i].getID()));
+				::logInfo("Cooldown Seconds: " + coolDownSeconds);
+				::logInfo("Event Cooldown Setting: " + allEvents[i].m.Cooldown);
+				::logInfo("Cooldown: " + cooldownUntil);
+				::logInfo("Fired On: " + firedOn);
 
-				// local debugObj = {
-				// 	cooldownUntil = allEvents[i].m.CooldownUntil,
-				// 	cooldownUntilCalc = cooldownUntil,
-				// 	firedOn = firedOn
-				// };
+				//9999+ cooldown events don't need a clean cooldown day/time. They should just be set to inifinity symbol or something.
 
-				// ::MSU.Log.printData(debugObj);
 
-				if (cooldownUntil > 9999) {
-					cooldownUntil = 9999;
-				}
+				local coolDownDisplay = createTimeOfDayDisplay(cooldownUntil);
+
+				// if (cooldownUntil < 9999) {
+				// 	cooldownUntil =
+				// }
+
+				local firedOnDisplay = createTimeOfDayDisplay(firedOn);
+
+				// if (cooldownUntil > 9999) {
+				// 	cooldownUntil = 9999;
+				// }
 
 				this.m.EventsOnCooldown.append({
 						id = allEvents[i].getID(),
 						name = createHumanReadableEventName(allEvents[i].getID()),
-						firedOnDay = firedOn,
+						firedOnNumber = firedOn,
+						firedOnDay = firedOnDisplay,
 						mayGiveBrother = eventMayGiveBrother(allEvents[i]),
-						onCooldownUntilDay = cooldownUntil,
+						onCooldownUntilDay = coolDownDisplay,
+						onCooldownUntilDayNumber = cooldownUntil,
 						icon = getEventIcon(allEvents[i])
 					});
 			}
@@ -420,7 +594,7 @@
 				local eventScore = allEvents[i].getScore();
 				local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
 
-				if (eventCooldown >= 99999) {
+				if (eventCooldown > 9999) {
 					eventCooldown = 9999;
 				}
 

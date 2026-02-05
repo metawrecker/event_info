@@ -444,7 +444,7 @@ EventManagerScreen.prototype.populateEventCooldownContainer = function(_data)
 	var eventList = this.mEventData.EventsOnCooldown;
 
 	eventList.sort(function(a, b) {
-		return a.firedOnDay - b.firedOnDay;
+		return a.firedOnNumber - b.firedOnNumber;
 	});
 
 	$.each(eventList, function (_, _eventData) {
@@ -522,24 +522,24 @@ EventManagerScreen.prototype.createEventInPoolRow = function(_eventData)
 
 EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 {
-	var firedOnDay = 0;
-	var onCooldownUntilDay = 0;
+	// var firedOnDay = 0;
+	// var onCooldownUntilDay = 0;
 	var iconField = $("<div class='emi-cooldown-item-icon-container'/>");
 	var image = $('<img class="emi-event-item-icon"/>');
     image.attr('src', Path.GFX + _eventData.icon);
 	iconField.append(image);
 
-	if (_eventData.firedOnDay !== null && _eventData.firedOnDay >= 0) {
-		firedOnDay = _eventData.firedOnDay.toFixed(2);
-	}
+	// if (_eventData.firedOnDay !== null && _eventData.firedOnDay >= 0) {
+	// 	firedOnDay = _eventData.firedOnDay.toFixed(2);
+	// }
 
-	if (_eventData.onCooldownUntilDay != null && _eventData.onCooldownUntilDay >= 0) {
-		onCooldownUntilDay = _eventData.onCooldownUntilDay.toFixed(2);
-	}
+	// if (_eventData.onCooldownUntilDay != null && _eventData.onCooldownUntilDay >= 0) {
+	// 	onCooldownUntilDay = _eventData.onCooldownUntilDay.toFixed(2);
+	// }
 
 	var nameField = $("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-description'>" + _eventData.name + "</div>");
-	var firedOnField = $("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-description'>" + firedOnDay + "</div>");
-	var onCooldownField = $("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-description'>" + onCooldownUntilDay + "</div>");
+	var firedOnField = $("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-description'>" + _eventData.firedOnDay + "</div>");
+	var onCooldownField = $("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-description'>" + _eventData.onCooldownUntilDay + "</div>");
 
 	if (_eventData.mayGiveBrother) {
 		nameField.addClass('brother-highlight').addClass('emi-is-brother-event'); //.addClass('font-bold');
@@ -556,7 +556,7 @@ EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 	var eventContainer = $('<div class="emi-event-container"/>')
 		.attr('data-event-name', _eventData.name)
 		.attr('is-bro-event', _eventData.isBroEvent)
-		.attr('on-cooldown-until-day', _eventData.onCooldownUntilDay)
+		.attr('on-cooldown-until-day', _eventData.onCooldownUntilDayNumber)
 		.append(iconField)
 		.append(nameField)
 		.append(firedOnField)
