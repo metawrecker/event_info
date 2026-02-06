@@ -8,19 +8,23 @@
 /*
 	(0.9.8)
 	* Changed font color in most of the UI to not be the bright yellow title font.
-	* Events that may reward a bro are assigned the shiny bright yellow font. Gone is the green font.
+	* Events that may reward a bro are now assigned the shiny bright yellow font. Gone is the green font.
 	* Fixed issue where some events would display many decimal places.
 	* Adjusted summary text from "Chance for a brother" to "Chance for a brother event to fire".
 	* Expanded the tooltip that appears when hovering over the "Chance for a brother event to fire" text showing the actual chance for an event plus the real chance to score a new brother.
+	* Removed all decimal places from the UI except for the chance for an event bro event.
+	* Fixed issue where the "On Cooldown" events had incorrect values for Fired On Day and Available On Day.
+	* Change decimal display values of On Cooldown events to "Day - TimeOfDay" format in a way that matches the world clock.
+	* Added Blighted Guy 1 event to the list of bro events that have a partial success chance to reward a bro when the event fires.
+	* Fixed issue where crises events were always obscured, regardless of MSU Setting.
+	* Fixed issue where some bro events that include the word 'crises' were being obfuscated.
 
+	Something interesting that I've discovered while working on the event manager mod days / time of day. There are two clocks running behind the scenes. A virtual clock that is tied to things like events. A world map clock that is visual to the player. These two clocks grow further apart over time.
 
 	todo
-	. Investigate more readable day numbers (especially with rounding!)
 	. Add logic to process events in the cooldown list
 	. Create tooltips
 	. Fix issue where the filter box arrests attention away from the keybinds
-	. Come up with a new way to highlight that a bro event can give a bro.
-	. Fix events that have wildly long score -- cap visual to 2 decimals (occurred on Beast Slayers 1 save)
 
 */
 

@@ -1,14 +1,16 @@
 ::EventManagerInfo.TooltipIdentifiers <- {
 	Form = {
-		//EventBroChance = ::MSU.Class.BasicTooltip("Event Bro Chance", "This number is a sum of all the event bros you can actually unlock right now (highlighted in green) divided by the entire event pool."),
-		EventBroChance = ::MSU.Class.BasicTooltip("Event Bro Chance", function () {
-			local tooltipText = "This number is a sum of all the event bros you can actually unlock right now (highlighted in gold) divided by the entire event pool.";
+		EventBroChance = ::MSU.Class.BasicTooltip("Chance For An Event Brother Event", function () {
+			local tooltipText = "This number is a sum of all the event brother events that you can unlock right now (highlighted in yellow/gold) divided by the entire event pool."
 			local eventBros = ::EventManagerInfo.Events.getBroHiringEventsInQueue();
 			local actualScore = 0;
 
 			if (eventBros.len() == 0) {
 				return tooltipText;
 			}
+
+			tooltipText = tooltipText + "\n\n"
+				+ "Below you will find the chance to get a brother from an event right now.";
 
 			tooltipText = tooltipText + "\n"
 
@@ -17,12 +19,18 @@
 					local eventChance = event.score;
 
 					if (event.chanceForBrother < 100) {
-						eventChance = eventChance * event.chanceForBrother / 100;
+						eventChance = eventChance * event.chanceForBrother / 100.0;
 					}
 
 					actualScore += eventChance;
 
-					tooltipText = tooltipText + "\n" + ::MSU.Text.colorPositive(strip(event.name)) + ": " + ::MSU.Text.colorPositive(eventChance);
+					local eventChanceText = "";
+
+					if (event.score > eventChance) {
+						eventChanceText = " (" + ::MSU.Text.colorNegative(event.chanceForBrother + "% - " + ::MSU.Math.roundToDec(eventChance, 2)) + ")";
+					}
+
+					tooltipText = tooltipText + "\n" + strip(event.name) + ": " + event.score + eventChanceText;
 				}
 			}
 
@@ -32,10 +40,11 @@
 				sumOfAllEvents = 1;
 			}
 
-			local chanceForABro = actualScore / sumOfAllEvents * 100.0;
+			local chanceForABro = actualScore / (sumOfAllEvents * 1.0) * 100.0;
 
 			if (chanceForABro != ::EventManagerInfo.Events.getEventBroHiringScore()) {
-				tooltipText = tooltipText + "\n\n" + "Chance for a new bro is: " + ::MSU.Text.colorPositive(::MSU.Math.roundToDec(chanceForABro, 2)) + ::MSU.Text.colorPositive("%");
+				tooltipText = tooltipText + "\n\n" + "Chance for a new brother is: " + ::MSU.Math.roundToDec(chanceForABro, 2) + "%"
+					+ " (" + actualScore + " / " + sumOfAllEvents + ")";
 			}
 
 			return tooltipText;

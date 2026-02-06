@@ -86,8 +86,8 @@ EventManagerScreen.prototype.setData = function (_data)
 	this.populateSummary(_data);
 	this.populateEventsContainer(_data);
 	this.populateEventCooldownContainer(_data);
-	this.toggleObscuringCrisesEvents();
 	this.setDefaultsPerMSUISettings();
+	this.toggleObscuringCrisesEvents();
 	this.filterEvents();
 };
 
@@ -461,7 +461,7 @@ EventManagerScreen.prototype.populateSummary = function(_data)
 		broChance = (_data.EventBroHireScore / _data.AllScores * 1.0 * 100.0);
 	}
 
-	var text = "Chance for a brother event to fire: " + broChance.toFixed(2) + "% " + "(" + _data.EventBroHireScore + " / " + _data.AllScores.toFixed(2) + ")";
+	var text = "Chance for a brother event to fire: " + broChance.toFixed(2) + "% " + "(" + _data.EventBroHireScore + " / " + _data.AllScores.toFixed(0) + ")";
 	$("#emi-chance-for-a-brother").text(text);
 }
 
@@ -481,11 +481,11 @@ EventManagerScreen.prototype.createEventInPoolRow = function(_eventData)
 	}
 
 	if (_eventData.score != null && _eventData.score >= 0) {
-		eventScore = _eventData.score.toFixed(2);
+		eventScore = _eventData.score.toFixed(0);
 	}
 
 	if (_eventData.cooldown != null && _eventData.cooldown >= 0) {
-		eventCooldown = _eventData.cooldown.toFixed(2);
+		eventCooldown = _eventData.cooldown.toFixed(0);
 	}
 
 	var nameField = $("<div class='emi-event-item-name title-font-normal font-bold font-color-description'>" + eventName + "</div>");
@@ -493,15 +493,9 @@ EventManagerScreen.prototype.createEventInPoolRow = function(_eventData)
 	var cooldownField = $("<div class='emi-event-item-cooldown title-font-normal font-bold font-color-description'>" + eventCooldown + "</div>");
 	
 	if (_eventData.mayGiveBrother) {
-		nameField.addClass('brother-highlight').addClass('emi-is-brother-event'); ///.addClass('font-bold');
-		scoreField.addClass('brother-highlight'); //.addClass('font-bold');
-		cooldownField.addClass('brother-highlight'); //.addClass('font-bold');
-	}
-	else 
-	{
-		// nameField.addClass('non-brother-highlight');
-		// scoreField.addClass('non-brother-highlight');
-		// cooldownField.addClass('non-brother-highlight');
+		nameField.addClass('brother-highlight').addClass('emi-is-brother-event');
+		scoreField.addClass('brother-highlight');
+		cooldownField.addClass('brother-highlight'); 
 	}
 
 	var eventContainer = $('<div class="emi-event-container"/>')
@@ -513,17 +507,13 @@ EventManagerScreen.prototype.createEventInPoolRow = function(_eventData)
 		.append(scoreField)
 		.append(cooldownField);
 
-	// if (_eventData.mayGiveBrother) {
-	// 	eventContainer.addClass('emi-is-brother-event');
-	// }
-	
 	return eventContainer;
 }
 
 EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 {
 	// var firedOnDay = 0;
-	// var onCooldownUntilDay = 0;
+	var onCooldownUntilDay = 0;
 	var iconField = $("<div class='emi-cooldown-item-icon-container'/>");
 	var image = $('<img class="emi-event-item-icon"/>');
     image.attr('src', Path.GFX + _eventData.icon);
@@ -533,24 +523,18 @@ EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 	// 	firedOnDay = _eventData.firedOnDay.toFixed(2);
 	// }
 
-	// if (_eventData.onCooldownUntilDay != null && _eventData.onCooldownUntilDay >= 0) {
-	// 	onCooldownUntilDay = _eventData.onCooldownUntilDay.toFixed(2);
-	// }
+	if (_eventData.onCooldownUntilDay != null && _eventData.onCooldownUntilDay >= 0) {
+		onCooldownUntilDay = _eventData.onCooldownUntilDay.toFixed(0);
+	}
 
 	var nameField = $("<div class='emi-cooldown-item-name title-font-normal font-bold font-color-description'>" + _eventData.name + "</div>");
 	var firedOnField = $("<div class='emi-cooldown-item-fired-on title-font-normal font-bold font-color-description'>" + _eventData.firedOnDay + "</div>");
-	var onCooldownField = $("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-description'>" + _eventData.onCooldownUntilDay + "</div>");
+	var onCooldownField = $("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-description'>" + onCooldownUntilDay + "</div>");
 
 	if (_eventData.mayGiveBrother) {
-		nameField.addClass('brother-highlight').addClass('emi-is-brother-event'); //.addClass('font-bold');
-		firedOnField.addClass('brother-highlight'); //.addClass('font-bold');
-		onCooldownField.addClass('brother-highlight'); //.addClass('font-bold');
-	}
-	else 
-	{
-		// nameField.addClass('non-brother-highlight');
-		// firedOnField.addClass('non-brother-highlight');
-		// onCooldownField.addClass('non-brother-highlight');
+		nameField.addClass('brother-highlight').addClass('emi-is-brother-event');
+		firedOnField.addClass('brother-highlight');
+		onCooldownField.addClass('brother-highlight'); 
 	}
 
 	var eventContainer = $('<div class="emi-event-container"/>')
@@ -561,10 +545,6 @@ EventManagerScreen.prototype.createEventOnCooldownRow = function(_eventData)
 		.append(nameField)
 		.append(firedOnField)
 		.append(onCooldownField);
-
-	// if (_eventData.mayGiveBrother) {
-	// 	eventContainer.addClass('emi-is-brother-event');
-	// }
 	
 	return eventContainer;
 }
@@ -690,7 +670,7 @@ EventManagerScreen.prototype.toggleObscuringCrisesEvents = function()
 	var obscureCrisesEvents = this.mObscureCrisesEvents;
 
 	this.mEventPoolScrollContainer.find(".emi-event-container").each(function() {
-		if (obscureCrisesEvents && $(this).attr("crises-event") == "true") {
+		if (obscureCrisesEvents && $(this).attr("crises-event") == "true" && $(this).attr("is-bro-event") === "false") {
 			$(this).find(".emi-event-item-name").text("Crises Event")
 		}
 		else if (!obscureCrisesEvents && $(this).attr("crises-event") == "true") {
