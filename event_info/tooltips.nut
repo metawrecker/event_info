@@ -87,6 +87,27 @@
 	},
 	EventCooldown = {
 
+	},
+	EventInfo = {
+		NewsList = ::MSU.Class.BasicTooltip("News Currently Queued", function() {
+			local tooltipText = ""
+			local newsList = ::EventInfo.News.getNews();
+
+			if (newsList.len() == 0) {
+				tooltipText = "No news";
+			}
+			else {
+				tooltipText = "News queued up:";
+				tooltipText += "\n";
+
+				foreach (i, news in newsList) {
+					tooltipText += "\n";
+					tooltipText += news.name
+				};
+			}
+
+			return tooltipText;
+		}),
 	}
 }
 

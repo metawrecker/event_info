@@ -8,15 +8,24 @@ var EventInfoScreen = function (_parent)
 	this.mContainer = null;
 	this.mDialogContainer = null;
 	this.mContentContainer = null;
+
 	this.mEventPoolHeaderContent = null;
 	this.mEventPoolContainer = null;
 	this.mEventPoolScrollContainer = null;
-	this.mEventPoolMessage = null;
+	
 	this.mEventCooldownHeaderContent = null;
 	this.mEventCooldownContainer = null;
 	this.mEventCooldownScrollContainer = null;
+
+	this.mEventInfoHeaderContent = null;
+	this.mEventInfoContainer = null;
+	this.mEventInfoScrollContainer = null;
+
+	this.mEventPoolMessage = null;
 	this.mEventCooldownMessage = null;
+
 	this.mEventData = null;
+	this.mEventInfo = null;
 	this.mNameFilterInput = null;
 	this.mHideNonBroEventsCheckbox = null;
 	this.mHide9999CooldownEventsCheckbox = null;
@@ -26,8 +35,19 @@ var EventInfoScreen = function (_parent)
 	this.mObscureCrisesEvents = true;
 };
 
+//event info page
 /*
-	{
+	mEventInfo = {
+		AnyNews = "",
+		LastEventDayAndHour = "",
+		CurrentTile = "",
+		CurrentTerrain = "",
+		EnemyWithin4Tiles = ""
+	}
+*/
+
+/*
+	mEventData = {
 		BroHireEventsInPool = [{
 			id = "",
 			name = "",
@@ -55,6 +75,7 @@ var EventInfoScreen = function (_parent)
 		EventsOnCooldown = [{
 			id = "",
 			name = "",
+			score = 0,
 			onCooldownUntilDay = 0,
 			firedOnDay = 0
 			mayGiveBrother = false,
@@ -94,12 +115,18 @@ EventInfoScreen.prototype.setData = function (_data)
 	this.filterEvents();
 };
 
+EventInfoScreen.prototype.setInfo = function(_info)
+{
+	this.populateEventInfoFields(_info);
+}
+
 EventInfoScreen.prototype.destroyDIV = function ()
 {
 	this.mHideNonBroEventsCheckbox = null;
 	this.mHide9999CooldownEventsCheckbox = null;
 	this.mNameFilterInput = null;
 	this.mEventData = null;
+	this.mEventInfo = null;
 	this.mEventPoolMessage = null;
 	this.mEventCooldownMessage = null;
 	this.mVisibleContainer = null;
@@ -128,6 +155,14 @@ EventInfoScreen.prototype.destroyDIV = function ()
 	this.mEventCooldownScrollContainer.empty();
 	this.mEventCooldownScrollContainer.remove();
 	this.mEventCooldownScrollContainer = null;
+
+	this.mEventInfoHeaderContent.empty();
+	this.mEventInfoHeaderContent.remove();
+	this.mEventInfoHeaderContent = null;
+
+	this.mEventInfoContainer.empty();
+	this.mEventInfoContainer.remove();
+	this.mEventInfoContainer = null;
 
 	this.mDialogContainer.empty();
 	this.mDialogContainer.remove();
@@ -168,7 +203,7 @@ EventInfoScreen.prototype.createDIV = function (_parentDiv)
 	var dialogLayout = $("<div class='emi-screen-container'/>")
 	this.mContainer.append(dialogLayout);
 
-	this.mDialogContainer = dialogLayout.createDialog('Event Info (0.9.8)', 'View available events and events on cooldown', '', true, 'dialog-1024-768');
+	this.mDialogContainer = dialogLayout.createDialog('Event Info', 'View events and event manager details', '', true, 'dialog-1024-768');
 
 	this.mPageTabContainer = $('<div class="l-tab-container"/>');
     this.mDialogContainer.findDialogTabContainer().append(this.mPageTabContainer);
@@ -178,8 +213,10 @@ EventInfoScreen.prototype.createDIV = function (_parentDiv)
 	this.createButtonBar();
 	this.createTableHeaderSpaceForEventPoolContainer();
 	this.createTableHeaderSpaceForEventCooldownContainer();
+	this.createTableHeaderSpaceForEventInfoContainer();
 	this.createEventPoolContainer();
 	this.createEventCooldownContainer();
+	this.createEventInfoContainer();
 	this.createFilterBar();
 	this.createFooter();
 
@@ -203,10 +240,18 @@ EventInfoScreen.prototype.createButtonBar = function ()
         self.switchToEventsOnCooldownPanel();
     }, null, '', 7);
 
+	layout = $('<div class="l-tab-button"/>');
+    this.mPageTabContainer.append(layout);
+    var eventInfoButton = layout.createTabTextButton("Info", function ()
+    {
+        self.switchToEventInfoPanel();
+    }, null, '', 7);
+
 	eventPoolButton.addClass('is-selected');
 
 	eventPoolButton.attr("id", "emi-event-pool-button");
 	eventCooldownButton.attr("id", "emi-event-cooldown-button");
+	eventInfoButton.attr("id", "emi-event-info-button");
 }
 
 EventInfoScreen.prototype.createTableHeaderSpaceForEventPoolContainer = function ()
@@ -286,6 +331,20 @@ EventInfoScreen.prototype.createTableHeaderSpaceForEventCooldownContainer = func
 		.append($("<div class='emi-cooldown-item-cooldown-until-day title-font-normal font-bold font-color-description'>Available On Day</div>"));
 }
 
+EventInfoScreen.prototype.createTableHeaderSpaceForEventInfoContainer = function ()
+{
+	// var self = this;
+	// this.mEventInfoHeaderContent = $('<div id="emi-event-info-header-content" class="emi-content-header"/>')
+	// 	.appendTo(this.mContentContainer)
+	// 	.hide();
+
+	// var summaryContent = $('<div class="emi-event-summary"/>');
+	// this.mEventInfoHeaderContent.append(summaryContent);
+
+	// var pageDescription = $('<span class="emi-event-summary-content title-font-normal font-color-description"></span>')
+	// 	.appendTo(summaryContent);
+}
+
 EventInfoScreen.prototype.createEventPoolContainer = function ()
 {
 	this.mEventPoolContainer = $('<div id="emi-event-pool-container" class="emi-content-container"/>');
@@ -337,9 +396,94 @@ EventInfoScreen.prototype.createEventCooldownContainer = function ()
 	   });
 }
 
+EventInfoScreen.prototype.createEventInfoContainer = function()
+{
+	this.mEventInfoContainer = $('<div id="emi-event-info-container" class="emi-info-content-container"/>')
+		.hide();
+	this.mContentContainer.append(this.mEventInfoContainer);
+
+	this.mEventInfoScrollContainer = $('<div id="emi-event-info-scroll-container" class="emi-scroll-container"/>')
+	.appendTo(this.mEventInfoContainer);
+
+	var table = $('<table class="emi-info-table"/>')
+		.appendTo(this.mEventInfoScrollContainer);
+
+	var row = $('<tr />')
+		.appendTo(table);
+
+	var cell1 = $('<td class="emi-info-cell" />')
+		.appendTo(row);
+
+	var cell2 = $('<td class="emi-info-cell" />')
+		.appendTo(row);
+
+	var lastEventDayTile = $('<div class="emi-tile"/>')
+		.appendTo(cell1);
+	var lastEventDayHeader = $('<p class="emi-tile-header font-color-description font-bold title-font-normal">Last Event on Day</p>')
+		.appendTo(lastEventDayTile);
+	var lastEventDayText = $('<p id="emi-last-event-day" class="emi-tile-text font-color-description title-font-small">0</p>')
+		.appendTo(lastEventDayTile);
+
+	var anyNewsTile = $('<div class="emi-tile"/>')
+		.appendTo(cell2);
+	var anyNewsHeader = $('<p class="emi-tile-header font-color-description font-bold title-font-normal">Any News</p>')
+		.appendTo(anyNewsTile);
+	var anyNewsText = $('<p id="emi-any-news" class="emi-tile-text font-color-description title-font-small">No</p>')
+		.appendTo(anyNewsTile);
+
+	anyNewsTile.bindTooltip({contentType: 'msu-generic', modId: this.mModId, elementId: "EventInfo.NewsList"});
+
+	row = $('<tr />')
+		.appendTo(table);
+
+	cell1 = $('<td class="emi-info-cell" />')
+		.appendTo(row);
+
+	cell2 = $('<td class="emi-info-cell" />')
+		.appendTo(row);
+
+	var fourTileCheckTile = $('<div class="emi-tile"/>')
+		.appendTo(cell1);
+	var fourTileCheckHeader = $('<p class="emi-tile-header font-color-description font-bold title-font-normal">Too close to a hostile entity</p>')
+		.appendTo(fourTileCheckTile);
+	var fourTileCheckText = $('<p id="emi-within-4-tiles" class="emi-tile-text font-color-description title-font-small">No</p>')
+		.appendTo(fourTileCheckTile);
+
+	var currentTileTile = $('<div class="emi-tile"/>')
+		.appendTo(cell2);
+	var currentTileHeader = $('<p class="emi-tile-header font-color-description font-bold title-font-normal">Current Tile</p>')
+		.appendTo(currentTileTile);
+	var currentTileText = $('<p id="emi-current-tile" class="emi-tile-text font-color-description title-font-small">NA</p>')
+		.appendTo(currentTileTile);
+
+	row = $('<tr />')
+		.appendTo(table);
+
+	cell1 = $('<td class="emi-info-cell" />')
+		.appendTo(row);
+
+	var currentTerrainTile = $('<div class="emi-tile"/>')
+		.appendTo(cell1);
+	var currentTerrainHeader = $('<p class="emi-tile-header font-color-description font-bold title-font-normal">Current Terrain</p>')
+		.appendTo(currentTerrainTile);
+	var currentTerrainText = $('<p id="emi-current-terrain" class="emi-tile-text font-color-description title-font-small">NA</p>')
+		.appendTo(currentTerrainTile);
+
+	this.mEventInfoContainer.aciScrollBar({
+	         delta: 2,
+	         lineDelay: 0,
+	         lineTimer: 0,
+	         pageDelay: 0,
+	         pageTimer: 0,
+	         bindKeyboard: false,
+	         resizable: false,
+	         smoothScroll: true
+	   });
+}
+
 EventInfoScreen.prototype.createFilterBar = function()
 {
-	var filterContainer = $('<div class="emi-overview-filter-container"/>')
+	var filterContainer = $('<div id="emi-filter-row" class="emi-overview-filter-container"/>')
 		.appendTo(this.mContentContainer);
 	var self = this;
     var filterRow = $('<div class="emi-overview-filter-by-name-row"/>')
@@ -396,6 +540,9 @@ EventInfoScreen.prototype.createFooter = function ()
 	{
         self.onLeaveButtonPressed();
     }, '', 1);
+
+	var version = $('<span class="emi-footer-version-number font-color-description font-bold title-font-normal">Version 0.9.9</span>')
+	this.mDialogContainer.findDialogFooterContainer().append(version);
 }
 ///
 /// End creation of HTML elements
@@ -517,7 +664,6 @@ EventInfoScreen.prototype.createEventInPoolRow = function(_eventData)
 
 EventInfoScreen.prototype.createEventOnCooldownRow = function(_eventData)
 {
-	// var firedOnDay = 0;
 	var onCooldownUntilDay = 0;
 	var iconField = $("<div class='emi-cooldown-item-icon-container'/>");
 	var image = $('<img class="emi-event-item-icon"/>');
@@ -525,10 +671,6 @@ EventInfoScreen.prototype.createEventOnCooldownRow = function(_eventData)
 	iconField.append(image);
 
 	image.bindTooltip({contentType: 'msu-generic', modId: this.mModId, elementId: "EventPool.IconTooltip", eventId: _eventData.id, background: _eventData.background});
-
-	// if (_eventData.firedOnDay !== null && _eventData.firedOnDay >= 0) {
-	// 	firedOnDay = _eventData.firedOnDay.toFixed(2);
-	// }
 
 	if (_eventData.onCooldownUntilDay != null && _eventData.onCooldownUntilDay >= 0) {
 		onCooldownUntilDay = _eventData.onCooldownUntilDay.toFixed(0);
@@ -555,6 +697,15 @@ EventInfoScreen.prototype.createEventOnCooldownRow = function(_eventData)
 	
 	return eventContainer;
 }
+
+EventInfoScreen.prototype.populateEventInfoFields = function(_data) 
+{
+	$("#emi-last-event-day").text(_data.LastEventDayAndHour);
+	$("#emi-any-news").text(_data.AnyNews);
+	$("#emi-within-4-tiles").text(_data.EnemyWithin4Tiles);
+	$("#emi-current-tile").text(_data.CurrentTile);
+	$("#emi-current-terrain").text(_data.CurrentTerrain);
+}
 ///
 /// End adding data
 ///
@@ -571,19 +722,10 @@ EventInfoScreen.prototype.switchToEventsInPoolPanel = function ()
 {
 	this.mVisibleContainer = this.mEventPoolScrollContainer;
 
-	$('#emi-event-cooldown-button').removeClass("is-selected");
-	$('#emi-event-pool-button').addClass("is-selected");
-	
-	this.mNameFilterInput.val("");
-	this.mEventFilterText = "";
-	this.mEventPoolScrollContainer.find(".emi-event-container").show();
-	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
-
-	$("#emi-event-cooldown-container").hide();
-	$("#emi-event-cooldown-header-content").hide();
-	$("#emi-event-pool-container").show();
-	$("#emi-event-pool-header-content").show();
-	
+	this.setActiveButton('emi-event-pool-button');
+	this.toggleFilterRow(true);
+	this.clearFilter();
+	this.setContentFocus('emi-event-pool');
 	this.filterEvents();
 }
 
@@ -591,20 +733,78 @@ EventInfoScreen.prototype.switchToEventsOnCooldownPanel = function ()
 {
 	this.mVisibleContainer = this.mEventCooldownScrollContainer;
 
-	$('#emi-event-pool-button').removeClass("is-selected");
-	$('#emi-event-cooldown-button').addClass("is-selected");
+	this.setActiveButton('emi-event-cooldown-button');
+	this.toggleFilterRow(true);
+	this.clearFilter();
+	this.setContentFocus('emi-event-cooldown');
+	this.filterEvents();
+}
 
+EventInfoScreen.prototype.switchToEventInfoPanel = function () 
+{
+	this.mVisibleContainer = this.mEventInfoScrollContainer;
+
+	this.setActiveButton('emi-event-info-button');
+	this.toggleFilterRow(false);
+	this.clearFilter();
+	this.setContentFocus('emi-event-info');
+}
+
+EventInfoScreen.prototype.setActiveButton = function(_buttonId)
+{
+	var buttons = [
+		"emi-event-pool-button",
+		"emi-event-cooldown-button",
+		"emi-event-info-button"
+	];
+
+	$.each(buttons, function(_, _id) {
+		if (_id == _buttonId) {
+			$('#' + _id).addClass("is-selected");
+		}
+		else {
+			$('#' + _id).removeClass("is-selected");
+		}
+	});
+}
+
+EventInfoScreen.prototype.clearFilter = function()
+{
 	this.mNameFilterInput.val("");
 	this.mEventFilterText = "";
 	this.mEventPoolScrollContainer.find(".emi-event-container").show();
 	this.mEventCooldownScrollContainer.find(".emi-event-container").show();
+}
 
-	$("#emi-event-pool-container").hide();
-	$("#emi-event-pool-header-content").hide();
-	$("#emi-event-cooldown-container").show();
-	$("#emi-event-cooldown-header-content").show();
+EventInfoScreen.prototype.toggleFilterRow = function(_show) 
+{
+	if (_show) {
+		$('#emi-filter-row').show();
+	}
+	else {
+		$('#emi-filter-row').hide();
+	}
+}
 
-	this.filterEvents();
+EventInfoScreen.prototype.setContentFocus = function(_sectionIdStart)
+{
+	var sectionIds = [
+		"emi-event-cooldown-container",
+		"emi-event-cooldown-header-content",
+		"emi-event-pool-container",
+		"emi-event-pool-header-content",
+		"emi-event-info-container",
+		"emi-event-info-header-content"
+	];
+
+	$.each(sectionIds, function(_, _id) {
+		if (_id.indexOf(_sectionIdStart) == 0) {
+			$("#" + _id).show();
+		}
+		else {
+			$("#" + _id).hide();
+		}
+	});
 }
 ///
 /// End button press functions
@@ -691,9 +891,6 @@ EventInfoScreen.prototype.setDefaultsPerMSUISettings = function()
 	var showOnlyBroEvents = false; 
 	var hide9999CooldownEvents = true; 
 	var obscureCrisesEvents = true;
-
-	/// I don't think this is a good idea to hide this - the log won't go to game log and will just appear as a bug
-
 
 	try {
 		showOnlyBroEvents = MSU.getSettingValue(this.mModId, "DefaultOnlyShowBroEvents");

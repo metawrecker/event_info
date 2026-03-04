@@ -9,10 +9,19 @@
 /*
 	(0.9.9)
 	#Major Changes / New Features
+	* Added new Info tab that includes data like
+	*	Last Event Day/Time
+	*	Any News?
+	*		Added a tooltip to list all the news in the news pool
+	*	Too close to an enemy unit?
+	*	Current tile
+	*	Current terrain
 
 	#UI Changes
+	* Moved version number to the bottom right of the UI
 
 	#Bug Fixes
+	* Fixed Thief in the Night % chance. Changed to 56, down from 75.
 
 	#Vanilla Fixes
 
@@ -22,9 +31,12 @@
 	* Fix issue where the filter box arrests attention away from the keybinds
 	* Create event library
 	* Fix issue where news appears in the event pool and adds to the event score and bro event %. I think I like displaying the news still but it needs to not factor into the score
-	* Move the version number to the footer right
 	* Implement the version number into mod settings or something so I'm not updating two places each new version
+	* Add Score to On Cooldown page
+	* Fix issue where pressing Esc exits the UI and also opens the game menu.
+
 	* Add a place showing News is queued??
+	* Move the version number to the footer right
 */
 
 local requiredMods = [
