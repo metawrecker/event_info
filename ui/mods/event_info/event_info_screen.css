@@ -177,6 +177,62 @@
 	
 }
 
+/************************************
+* Info Tile styling
+*************************************/
+.emi-info-content-container
+{
+	width: 100%;
+	overflow: auto;
+	justify-content: center;
+	align-items: center;
+	position: absolute !important;
+	top: 5;
+	left: 0;
+	right: 0;
+	bottom: 70;
+	padding-left: 3.5rem;
+	padding-right: 3rem;
+}
+
+.emi-info-table
+{
+	width: 100%;
+}
+
+.emi-info-cell
+{
+	width: 50%;
+}
+
+.emi-tile
+{
+	height: 8rem;
+	border-color: #af7b0a;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 5px;
+	/* border: 1px solid #af7b0a;
+	border-image: url("coui://gfx/mods/msu/skin/generic_background_large_border.png") 50 fill stretch; */
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	margin: 10px;
+	text-align: center;
+	position: relative;
+	overflow: hidden;
+	cursor: default;
+}
+.emi-tile-header
+{
+	margin-bottom: 2px;
+}
+
+.emi-tile-text
+{
+
+}
 
 /************************************
 * Event row styling
@@ -338,16 +394,16 @@
 {
     background-image: url("coui://gfx/ui/skin/text_input_300x40_selected.png");
 }
-.emi-overview-footer
+
+
+/************************************
+* Checkbox styling
+*************************************/
+.emi-footer-version-number
 {
-	display:flex;
-	align-items: center;
-	justify-content: center;
-}
-.emi-overview-footer .ui-control
-{
-	height:4.3rem;
-	width: 17.5rem;
+	position: absolute;
+	right: 15;
+	top: 15;
 }
 
 
