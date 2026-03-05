@@ -31,6 +31,31 @@ this.event_info_screen <- ::inherit("scripts/mods/msu/ui_screen", {
 		return ret;
 	}
 
+	function getEventInfo()
+	{
+		::EventInfo.News.init();
+
+		local anyNews = ::EventInfo.News.anyNews();
+
+		local ret = {
+			AnyNews = "",
+			//News = [],
+			LastEventDayAndHour = "",
+			CurrentTile = "",
+			CurrentTerrain = "",
+			EnemyWithin4Tiles = ""
+		};
+
+		ret.AnyNews = ::EventInfo.News.anyNews();
+		//ret.News = ::EventInfo.News.getNews();
+		ret.LastEventDayAndHour = ::EventInfo.Events.getLastEventTime();
+		ret.CurrentTile = ::EventInfo.TileUtil.getTileType();
+		ret.CurrentTerrain = ::EventInfo.TileUtil.getTerrainType();
+		ret.EnemyWithin4Tiles = ::EventInfo.TileUtil.hostilesAreWithin4Tiles();
+
+		return ret;
+	}
+
 	function show()
 	{
 		::World.State.setAutoPause(true);
@@ -43,9 +68,13 @@ this.event_info_screen <- ::inherit("scripts/mods/msu/ui_screen", {
 		});
 
 		local data = this.getUIData();
+		local info = this.getEventInfo();
 
 		this.Tooltip.hide();
+
 		this.m.JSHandle.asyncCall("setData", data);
+		this.m.JSHandle.asyncCall("setInfo", info);
+
 		this.m.JSHandle.asyncCall("show", null);
 
 		return false;

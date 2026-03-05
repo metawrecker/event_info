@@ -98,6 +98,9 @@
 		else if (eventId.find("event.") != null) {
 			tempName = eventId.slice(6);
 		}
+		else {
+			tempName = eventId;
+		}
 
 		local words = split(tempName, "_");
 
@@ -125,6 +128,7 @@
 			case "event.runaway_laborers":
 				return 70;
 			case "event.thief_caught":
+				return 56;
 			case "event.the_horseman":
 				return 75;
 		}
@@ -414,6 +418,20 @@
 		return timeDisplay;
 	}
 
+	function getLastEventTime()
+	{
+		local lastEventTime = ::World.Events.m.LastEventTime;
+
+		if (lastEventTime <= 0 || ::World.Events.m.LastEventID == 0) {
+			::logInfo("Aborting out of getLastEventTime()");
+			return "";
+		}
+
+		local days = lastEventTime / this.m.WorldSecondsPerDay;
+
+		return createTimeOfDayDisplay(days);
+	}
+
 	function processEventsAndStoreValues()
 	{
 		if (::mods_getRegisteredMod("mod_hardened") != null) {
@@ -473,6 +491,7 @@
 				this.m.EventsOnCooldown.append({
 						id = currentEventId,
 						name = createHumanReadableEventName(currentEventId),
+						score = allEvents[i].getScore(),
 						firedOnNumber = firedOn,
 						firedOnDay = firedOnDisplay,
 						mayGiveBrother = eventMayGiveBrother(allEvents[i]),
