@@ -32,14 +32,21 @@ I created this Battle Brothers mod because the entire event system in the game i
 
 ## Features
 Event Pool
--    All events that you currently qualify for will appear here. Brother and Dog events get fun extra icons.
+- All events that you currently qualify for will appear here. Brother and Dog events get fun extra icons.
 
-![20260225150640_1](https://github.com/user-attachments/assets/07a6e899-0dbc-436a-b8eb-2adb202b6124)
+![20260304164535_1](https://github.com/user-attachments/assets/852d875c-4354-4b83-8a4f-9e60baaa43d9)
 
 On Cooldown
--    All events that are on cooldown, sorted from smallest to largest "Fired On Day" value.
+- All events that are on cooldown, sorted from smallest to largest "Fired On Day" value.
 
-![20260225150653_1](https://github.com/user-attachments/assets/8befda97-9a8a-4ea6-b640-5faba6bd43e9)
+![20260304164543_1](https://github.com/user-attachments/assets/1d6b5b9e-7849-44fd-82c2-43019b935ff4)
+
+Info
+- Several pieces of information that may be useful for event tracking, plus info on whether any News is queued up.
+  - Why care about news? I'm glad you asked. In Battle Brothers, news must fire before any events can fire. If news cannot fire, however, you will not be able to fire any events. Thus, it is important to track News.
+  - News mainly only appears with the four end-game crises, with the most news appearing for the Holy War.
+ 
+![20260304164548_1](https://github.com/user-attachments/assets/f2fc1230-cea1-4d9d-9e5a-6652756a7a07)
 
 ### Does this mod change vanilla behavior?
 - There are NO code changes to how vanilla's event system works. This is an 'info only' mod.
