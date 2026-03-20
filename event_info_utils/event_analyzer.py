@@ -4,7 +4,7 @@ import re
 import os
 import sys
 from file_io import FileIO
-from pathlib import Path
+#from pathlib import Path
 from typing import Dict, Any, Optional
 
 class EventAnalyzer:
@@ -109,26 +109,21 @@ class EventAnalyzer:
             "trait.mad": "Mad"
         }
 
-    def analyze_directory(self, directory: str, output_file: str = 'event_requirements'):
+    def iterate_through_squirrel_files(self, directory: str, output_file: str = 'event_requirements'):
         results = []
-        
-        event_dir = Path(directory)
-        if not event_dir.exists():
-            print(f"Error: Directory '{directory}' does not exist", file=sys.stderr)
-            return
-        
-        nut_files = list(event_dir.rglob('*.nut'))
-        print(f"Found {len(nut_files)} .nut files")
+        squirrel_files = FileIO.get_squirrel_files_in_directory(directory)
 
-        #analyzer = EventAnalyzer()
-        
-        for i, filepath in enumerate(nut_files, 1):
-            if i % 50 == 0:
-                print(f"Processing {i}/{len(nut_files)}...")
+        if not squirrel_files:
+            print("No squirrel .nut files found in the directory that you passed in.")
+            return
+
+        print(f"Found {len(squirrel_files)} .nut files")
+
+        for i, filepath in enumerate(squirrel_files, 1):
+            print(f"Processing {i}/{len(squirrel_files)}...")
             
             result = self.analyze_file(str(filepath))
             if result:
-                #print(result)
                 results.append(result)
 
         print(f"\nAnalyzed {len(results)} event files with requirements")
@@ -154,42 +149,38 @@ class EventAnalyzer:
         if self.file_is_for_a_special_event(content):
             return None
         
-        # Reset for new file
         self.reset()
 
         self.data['FileName'] = os.path.basename(filepath)
         self.data['EventID'] = self.extract_event_id(content)
         self.current_event_id = self.data['EventID']
 
-        on_update_score = self.extract_function(content, 'onUpdateScore')
+        on_update_score = FileIO.extract_function_from_file(content, 'onUpdateScore')
         if not on_update_score:
             return None
         
         self.content = on_update_score
 
-        self.analyze_function(on_update_score)
+        self.analyze_on_update_score_function(on_update_score)
 
         #Clean up - remove None values
         result = {}
         for k, v in self.data.items():
             if v is not None and v != []:
                 result[k] = v
-
-        # if 'EventID' not in result:
-        #     result['EventID'] = self.data['EventID']
-        # if 'FileName' not in result:
-        #     result['FileName'] = self.data['FileName']
         
         return result if len(result) > 1 else None
     
     def file_should_not_be_processed(self, content: str) -> bool:
         if 'onUpdateScore' not in content:
             return True
+        
         return False
 
     def file_is_for_a_special_event(self, content: str) -> bool:
         if 'this.m.IsSpecial = true;' in content:
             return True
+        
         return False
     
     def extract_event_id(self, content: str) -> str:
@@ -200,212 +191,7 @@ class EventAnalyzer:
         
         return "unknown"
     
-    def extract_function(self, content: str, func_name: str) -> Optional[str]:
-        pattern = rf'function\s+{func_name}\s*\([^)]*\)\s*{{'
-        match = re.search(pattern, content)
-        if not match:
-            return None
-        
-        start = match.end() - 1
-        brace_count = 0
-        i = start
-        while i < len(content):
-            if content[i] == '{':
-                brace_count += 1
-            elif content[i] == '}':
-                brace_count -= 1
-                if brace_count == 0:
-                    return content[start:i+1]
-            i += 1
-        
-        return None
-    
-    def get_if_block_contents(self, if_line) -> str:
-        if not self.content:
-            print("onUpdateScore() function not found")
-            return ""
-        
-        lines = self.content.split('\n')
-        
-        # Find the index of the if statement line
-        if_index = None
-        for i, line in enumerate(lines):
-            if if_line in line.strip():
-                if_index = i
-                break
-        
-        if if_index is None:
-            print("if_index is None")
-            return ""
-
-        # Find the opening brace
-        brace_index = None
-        for i in range(if_index, len(lines)):
-            if '{' in lines[i]:
-                brace_index = i
-                break
-
-        if brace_index is None:
-            print("brace_index is None")
-            return ""
-
-        # Collect lines until closing brace
-        contents = []
-        for i in range(brace_index + 1, len(lines)):
-            if '}' in lines[i]:
-                break
-            contents.append(lines[i].strip())
-
-        return '\n'.join(contents)
-    
-    def get_else_block_contents(self, if_line) -> str:
-    # """
-    # Find the else clause that follows an if statement and return its contents.
-    # Returns empty string if no else clause exists.
-    
-    # Args:
-    #     if_line: The if statement line to search for
-        
-    # Returns:
-    #     Contents of the else block, or empty string if no else found
-    # """
-        if not self.content:
-            print("onUpdateScore() function not found")
-            return ""
-        
-        lines = self.content.split('\n')
-        
-        # Find the index of the if statement line
-        if_index = None
-        for i, line in enumerate(lines):
-            if if_line in line.strip():
-                if_index = i
-                break
-        
-        if if_index is None:
-            print("if_index is None")
-            return ""
-        
-        # Find the closing brace of the if block
-        brace_count = 0
-        started = False
-        if_closing_index = None
-        
-        for i in range(if_index, len(lines)):
-            line = lines[i]
-            
-            # Count braces
-            for char in line:
-                if char == '{':
-                    brace_count += 1
-                    started = True
-                elif char == '}':
-                    brace_count -= 1
-                    
-                    # Found the closing brace of the if block
-                    if started and brace_count == 0:
-                        if_closing_index = i
-                        break
-            
-            if if_closing_index is not None:
-                break
-        
-        if if_closing_index is None:
-            print("if_closing_index is None - couldn't find end of if block")
-            return ""
-        
-        # Look for 'else' after the if block closing brace
-        # Check the same line first, then subsequent lines
-        else_index = None
-        
-        # Check if else is on the same line as the closing brace
-        closing_line = lines[if_closing_index].strip()
-        if 'else' in closing_line:
-            # } else { or } else if (
-            else_index = if_closing_index
-        else:
-            # Check next few lines for else
-            for i in range(if_closing_index + 1, min(if_closing_index + 5, len(lines))):
-                line = lines[i].strip()
-                
-                # Skip empty lines and comments
-                if not line or line.startswith('//'):
-                    continue
-                
-                # Found else
-                if line.startswith('else'):
-                    else_index = i
-                    break
-                
-                # Found something else (not an else clause)
-                if line and not line.startswith('//'):
-                    break
-        
-        if else_index is None:
-            return ""  # No else clause found
-        
-        # Now extract the else block contents
-        else_line = lines[else_index]
-        
-        # Check if it's else-if
-        if 'if' in else_line and '(' in else_line:
-            # else if (...) - treat it like a regular if statement
-            # Find its opening brace
-            else_brace_index = None
-            for i in range(else_index, len(lines)):
-                if '{' in lines[i]:
-                    else_brace_index = i
-                    break
-            
-            if else_brace_index is None:
-                return else_line.strip()  # Single line else-if
-            
-            # Collect contents
-            contents = []
-            brace_count = 0
-            started = False
-            
-            for i in range(else_brace_index, len(lines)):
-                line = lines[i]
-                
-                for char in line:
-                    if char == '{':
-                        brace_count += 1
-                        started = True
-                    elif char == '}':
-                        brace_count -= 1
-                        if started and brace_count == 0:
-                            return '\n'.join(contents)
-                
-                # Add line content (skip the opening brace line)
-                if i > else_brace_index:
-                    contents.append(lines[i].strip())
-            
-            return '\n'.join(contents)
-        
-        # Regular else block
-        else:
-            # Find opening brace for else
-            else_brace_index = None
-            for i in range(else_index, len(lines)):
-                if '{' in lines[i]:
-                    else_brace_index = i
-                    break
-            
-            if else_brace_index is None:
-                # Single line else without braces: else return;
-                return else_line.replace('else', '').strip()
-            
-            # Collect else block contents
-            contents = []
-            for i in range(else_brace_index + 1, len(lines)):
-                if '}' in lines[i]:
-                    break
-                contents.append(lines[i].strip())
-            
-            return '\n'.join(contents)
-    
-    def analyze_function(self, func_body: str):
+    def analyze_on_update_score_function(self, func_body: str):
         lines = func_body.split('\n')
         
         for i, line in enumerate(lines):
@@ -413,66 +199,35 @@ class EventAnalyzer:
 
             handled = False
 
-            if not self._line_should_be_evaluated(line):
+            if not self.line_should_be_evaluated(line):
                 continue
             
-            if self._line_is_for_specific_event_override(line):
+            if self.line_is_for_specific_event_override(line):
                 continue
 
-            handled = self._line_is_for_DLC_check(line) or handled
-            handled = self._line_is_for_time_of_day_check(line) or handled
-            handled = self._line_is_for_open_roster_check(line) or handled
-            handled = self._line_is_for_money_check(line) or handled
-            handled = self._line_is_for_tile_check(line) or handled
-            handled = self._line_is_for_brother_background_check(line) or handled
-            handled = self._line_is_for_a_trait_check(line) or handled
-            handled = self._line_is_for_candidate_check(line) or handled
-            handled = self._line_is_for_origin_check(line) or handled
-            handled = self._line_is_for_crises_event(line) or handled
-            handled = self._line_is_for_day_check(line) or handled
-            handled = self._line_is_for_inventory_check(line) or handled
-            handled = self._line_is_for_player_check(line) or handled 
-            handled = self._line_is_for_item_check(line) or handled
-            handled = self._line_is_for_flags_check(line) or handled
-            handled = self._line_is_for_retinue_check(line) or handled
-
-            # if not self._line_should_be_evaluated(line):
-            #     continue
-            # if self._line_is_for_specific_event_override(line):
-            #     continue
-            # if self._line_is_for_DLC_check(line):
-            #     continue
-            # if self._line_is_for_time_of_day_check(line):
-            #     continue
-            # if self._line_is_for_open_roster_check(line):
-            #     continue
-            # if self._line_is_for_money_check(line):
-            #     continue
-            # if self._line_is_for_tile_check(line):
-            #     continue
-            # if self._line_is_for_brother_background_check(line):
-            #     continue
-            # if self._line_is_for_origin_check(line):
-            #     continue
-            # if self._line_is_for_crises_event(line):
-            #     continue
-            # if self._line_is_for_day_check(line):
-            #     continue
-            # if self._line_is_for_inventory_check(line):
-            #     continue
-            # if self._line_is_for_player_check(line):
-            #     continue
-            # if self._line_is_for_item_check(line):
-            #     continue
-            # if self._line_is_for_flags_check(line):
-            #     continue
+            handled = self.line_is_for_DLC_check(line) or handled
+            handled = self.line_is_for_time_of_day_check(line) or handled
+            handled = self.line_is_for_open_roster_check(line) or handled
+            handled = self.line_is_for_money_check(line) or handled
+            handled = self.line_is_for_tile_check(line) or handled
+            handled = self.line_is_for_brother_background_check(line) or handled
+            handled = self.line_is_for_a_trait_check(line) or handled
+            handled = self.line_is_for_candidate_check(line) or handled
+            handled = self.line_is_for_origin_check(line) or handled
+            handled = self.line_is_for_crises_event(line) or handled
+            handled = self.line_is_for_day_check(line) or handled
+            handled = self.line_is_for_inventory_check(line) or handled
+            handled = self.line_is_for_player_check(line) or handled 
+            handled = self.line_is_for_item_check(line) or handled
+            handled = self.line_is_for_flags_check(line) or handled
+            handled = self.line_is_for_retinue_check(line) or handled
 
             if not handled:
                 EventAnalyzer.error_count += 1
                 self.data['UnhandledLines'].append(line)
                 #print(line)
 
-    def _line_should_be_evaluated(self, line: str) -> bool:
+    def line_should_be_evaluated(self, line: str) -> bool:
         if not line:
             return False
 
@@ -481,14 +236,6 @@ class EventAnalyzer:
         
         if len(line) < 4:
             return False
-        
-        # if 'this.World.getPlayerRoster().getAll()' in line:
-        #     self.iterates_through_roster = True
-        #     return False
-        
-        # if 'local candidates = [];' in line:
-        #     # set flag...
-        #     return False
         
         if line.startswith('local ') or line.startswith('return'):
             return False
@@ -499,9 +246,6 @@ class EventAnalyzer:
         if 'if (this.m.Town == null)' in line:
             return False
         
-        # if 'candidates' in line:
-        #     return False
-        
         match = re.search(r'if\s*\(', line)
 
         if not match:
@@ -509,11 +253,12 @@ class EventAnalyzer:
     
         return True
     
-    def _line_is_for_specific_event_override(self, line: str) -> bool:
+    def line_is_for_specific_event_override(self, line: str) -> bool:
 
         if self.current_event_id == "event.trade_black_book":
             if '(this.World.Assets.getOrigin().getID() != "scenario.militia")' in line:
-                self.data['SpecialConsiderations'].append("The Peasant Militia origin qualifies without having to read the black book.")
+                self.data['SpecialConsiderations'].append("The Peasant Militia origin qualifies without having a bro with the Mad Trait.")
+                self.data['SpecialConsiderations'].append("The Peasant Militia origin skips the Read Black Book event.")
                 #self.data['SpecialConsiderations'].append("All other origins must complete the Read Black Book event and must have the Mad brother in the roster.")
                 return True
             
@@ -586,10 +331,17 @@ class EventAnalyzer:
             if 'bro.m.Ethnicity' in line or 'lowestChance' in line or 'bro.getSkills().hasSkill' in line:
                 return True
 
+        if self.current_event_id == "event.gladiators_food":
+            if 'item.getRawValue() >= 85' in line:
+                self.data['SpecialConsiderations'].append("Requires only food stacks valued at 84 or fewer crowns.")
+                return True
+
+            if 'if (hasExquisiteFood)' in line or 'isItemType(this.Const.Items.ItemType.Food)' in line:
+                return True
 
         return False
 
-    def _line_is_for_DLC_check(self, line: str) -> bool:
+    def line_is_for_DLC_check(self, line: str) -> bool:
         if 'Const.DLC' not in line:
             return False
         
@@ -608,7 +360,7 @@ class EventAnalyzer:
 
         return False        
 
-    def _line_is_for_time_of_day_check(self, line: str) -> bool:
+    def line_is_for_time_of_day_check(self, line: str) -> bool:
         if 'getTime()' not in line:
             return False
 
@@ -627,7 +379,7 @@ class EventAnalyzer:
 
         return False
     
-    def _line_is_for_open_roster_check(self, line: str) -> bool:
+    def line_is_for_open_roster_check(self, line: str) -> bool:
         if 'getPlayerRoster().getSize()' not in line and 'brothers.len()' not in line:
             return False
         
@@ -672,8 +424,7 @@ class EventAnalyzer:
 
         return False
     
-    # 	if (this.World.Assets.getMoney() < 750)    
-    def _line_is_for_money_check(self, line: str) -> bool:
+    def line_is_for_money_check(self, line: str) -> bool:
         if 'getMoney()' not in line:
             return False
         
@@ -691,7 +442,7 @@ class EventAnalyzer:
         
         return False
     
-    def _line_is_for_tile_check(self, line: str) -> bool:
+    def line_is_for_tile_check(self, line: str) -> bool:
         matched_location = False
         tileDetails = {}
 
@@ -723,7 +474,7 @@ class EventAnalyzer:
                 operator = match.group(1)
                 distance = int(match.group(2))
 
-                if_statement_contents = self.get_if_block_contents(line)
+                if_statement_contents = FileIO.get_if_block_contents(self.content, line)
 
                 if if_statement_contents == "":
                     matched_location = False
@@ -770,7 +521,7 @@ class EventAnalyzer:
             matched_location = True
             variable_check = '!' + self.location_check_variable
 
-            if variable_check in line and 'return' in self.get_if_block_contents(line):
+            if variable_check in line and 'return' in FileIO.get_if_block_contents(self.content, line):
                 #we've already documented the requirements for this location
                 matched_location = True
 
@@ -861,17 +612,14 @@ class EventAnalyzer:
 
         return matched_location
     
-    def _line_is_for_brother_background_check(self, line: str) -> bool:
+    def line_is_for_brother_background_check(self, line: str) -> bool:
         if 'getBackground().getID()' not in line:
             return False
         
         found_match = False
         
-        if_statement_lines = self.get_if_block_contents(line)
-        else_lines = self.get_else_block_contents(line)
-
-        # if len(if_statement_lines) > 2:
-        #     return False
+        if_statement_lines = FileIO.get_if_block_contents(self.content, line)
+        else_lines = FileIO.get_else_block_contents(self.content, line)
 
         if 'getBackground()' in line and 'getLevel()' not in line: 
             matches = re.findall(r'getBackground\(\)\.getID\(\)\s*(==|!=)\s*"([^"]+)"', line)
@@ -883,38 +631,24 @@ class EventAnalyzer:
                 
                     background_name = background_str.replace('background.', '')
 
+                    print("evaluating background: " + background_name)
+
                     if "==" in operator and background_name not in self.data['BackgroundRequirements']:
                         if 'return' in if_statement_lines:
                             found_match = True
                             continue
-                        
-                        # Dried Oasis still creates a BackgroundReqs record for the Beast Slayer.. 
-                        
+
                         found_match = True
 
                     if 'candidate' in if_statement_lines:
                         self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": background_name})
-                        print("setting candidate")
                     
                     if 'return' in if_statement_lines:
-                        print("return in candiate check")
+                        None
 
                     if 'candidate' in else_lines:
-                        print("candidate else")
                         self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
 
-                
-        # elif 'candidate' in line:
-        #    # print('candidate in line')
-        #     if_statement_lines = self.get_if_block_contents(line)
-
-        #     for line in if_statement_lines.split('\n'):
-        #         print("candidate line: " + line)
-
-        #     if 'return' not in if_statement_lines:
-        #         self.data['BackgroundRequirements'].clear()
-                
-        #        return True
         elif 'getBackground()' in line and 'getLevel()' in line:
             if line.index('getBackground()') < line.index('getLevel()'):
                 matches = re.findall(r'(==|!=)\s*"([\w.]+)".*?bro\.getLevel\(\)\s*(>=|<=|>|<|==|!=)\s*(\d+)', line)
@@ -925,8 +659,6 @@ class EventAnalyzer:
                         background_str = match[1]
                         level_operator = match[2]
                         level = int(match[3])
-
-                       # print("Data: " + background_str + " " + level_operator + match[3])
 
                         if '==' in bkgrnd_operator:
                             min_level = 0
@@ -946,13 +678,11 @@ class EventAnalyzer:
 
                             if 'candidate' in if_statement_lines:
                                 self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": "other"})
-                                print("setting candidate")
                             
                             if 'return' in if_statement_lines:
-                                print("return in candiate check")
+                                None
 
                             if 'candidate' in else_lines:
-                                print("candidate else")
                                 self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
 
                 return True
@@ -975,13 +705,11 @@ class EventAnalyzer:
 
                         if 'candidate' in if_statement_lines:
                             self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": background_name, "IsPlayerCharacter": True})
-                            print("setting candidate as player character")
                         
                         if 'return' in if_statement_lines:
-                            print("return in candiate check")
+                            None
 
                         if 'candidate' in else_lines:
-                            print("candidate else")
                             self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
             else:
                 matches = re.findall(r'bro\.getLevel\(\)\s*(>=|<=|>|<|==|!=)\s*(\d+).*?(==|!=)\s*"([\w.]+)"', line)
@@ -1011,82 +739,82 @@ class EventAnalyzer:
 
                             if 'candidate' in if_statement_lines:
                                 self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": "other"})
-                                print("setting candidate")
                             
                             if 'return' in if_statement_lines:
-                                print("return in candiate check")
+                                None
 
                             if 'candidate' in else_lines:
-                                print("candidate else")
                                 self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
 
                 return True
         return found_match
     
-    def _line_is_for_a_trait_check(self, line: str) -> bool:
+    def line_is_for_a_trait_check(self, line: str) -> bool:
         if 'bro.getSkills()' not in line:
             return False
     
         match = re.search(r'hasSkill\("([^"]+)"\)', line)
-        if_statement_lines = self.get_if_block_contents(line)
+        if_statement_lines = FileIO.get_if_block_contents(self.content, line)
 
         if match:
             trait = match.group(1)
             if 'return' in if_statement_lines:
                 self.data["CandidateExcludedTraits"].append(self.trait_map[trait])
-
                 return True
-
+            
+            if 'candidate' in if_statement_lines:
+                self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": "none", "trait": self.trait_map[trait]})
+                return True
+            
         return False
 
-    def _line_is_for_candidate_check(self, line: str) -> bool:
+    def line_is_for_candidate_check(self, line: str) -> bool:
         if ('candidate' not in line and 'len()' not in line) or len(self.candidates_checked) == 0:
             return False
         
-        print(line)
+        candidate_matched = False
         
-        if_statement_lines = self.get_if_block_contents(line)
+        if_statement_lines = FileIO.get_if_block_contents(self.content, line)
+
+        # print("Candidates found")
+        # print(self.candidates_checked)
 
         for candidate in self.candidates_checked:
+            print("Candidate in the candidates list: " + candidate["background"])
             match = re.search(rf'{candidate["candidate_variable"]}.len\(\)\s*([<>=!]+)\s*(\d+)', line)
 
             if match:
-                print("matched candidate line")
                 operator = match.group(1)
                 number = int(match.group(2))
 
                 if '!=' in operator and number == 0:
-                    if 'return' in if_statement_lines:
+                    if candidate['background'] == "none":
+                        None
+                    elif 'return' in if_statement_lines:
                         self.data['BackgroundRequirements'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0})
                     else:
                         self.data['BackgroundsUnlockingExtraInteractions'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0})
 
-                    return True
-                
-                if '==' in operator and number == 0 and 'return' in if_statement_lines:
+                    candidate_matched = True
+                elif '==' in operator and number == 0 and 'return' in if_statement_lines:
+                    if candidate['background'] == "none":
+                        self.data['CandidateRequiredTraits'].append(candidate["trait"])
+                        candidate_matched = True
                     if candidate['background'] == "other":
-                        return True
+                        candidate_matched = True
                     else:
                         self.data['BackgroundRequirements'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0})
-                    return True
-                
-                # working on if (candidates.len() < 2) for Gladiator_vibes
-                if '<' in operator and number > 0 and 'return' in if_statement_lines:
+                    candidate_matched = True
+                elif '<' in operator and number > 0 and 'return' in if_statement_lines:
                     if candidate['background'] == "other":
-                        return True
+                        candidate_matched = True
                     else:
                         self.data['BackgroundRequirements'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0, "IsPlayerCharacter": candidate.get("IsPlayerCharacter", "")})
-                    return True
+                    candidate_matched = True
 
-            print(candidate)
+        return candidate_matched
 
-        # if any(keyword in line for keyword in self.candidates_checked):
-        #     print("Found a candidate line match!")
-        #     return True
-        
-        return False
-
-    def _line_is_for_origin_check(self, line: str) -> bool:
+    def line_is_for_origin_check(self, line: str) -> bool:
         #if (this.World.Assets.getOrigin().getID() != "scenario.gladiators")
         if 'getOrigin().getID()' not in line:
             return False
@@ -1108,7 +836,7 @@ class EventAnalyzer:
             return True
         return False
 
-    def _line_is_for_crises_event(self, line: str) -> bool:
+    def line_is_for_crises_event(self, line: str) -> bool:
         if ('isHolyWar()' not in line and 'isCivilWar()' not in line 
             and 'isGreenskinInvasion()' not in line and 'isUndeadScourge()' not in line
             and 'getGreaterEvilType()' not in line):
@@ -1156,7 +884,7 @@ class EventAnalyzer:
 
         return False
     
-    def _line_is_for_day_check(self, line: str) -> bool:
+    def line_is_for_day_check(self, line: str) -> bool:
         if 'getTime()' not in line: 
             return False
         
@@ -1180,7 +908,7 @@ class EventAnalyzer:
 
         return False
     
-    def _line_is_for_inventory_check(self, line: str) -> bool:
+    def line_is_for_inventory_check(self, line: str) -> bool:
         if 'getStash()' not in line: 
             return False
 
@@ -1211,11 +939,11 @@ class EventAnalyzer:
         
         return False
 
-    def _line_is_for_player_check(self, line: str) -> bool:
+    def line_is_for_player_check(self, line: str) -> bool:
         if 'asSkill("trait.player")' not in line and '"IsPlayerCharacter")' not in line:
             return False
         
-        if_statement = self.get_if_block_contents(line)
+        if_statement = FileIO.get_if_block_contents(self.content, line)
 
         if 'continue' in if_statement:
             self.data['PlayerCharacterExcluded'] = True
@@ -1227,7 +955,7 @@ class EventAnalyzer:
 
         return False
     
-    def _line_is_for_item_check(self, line: str) -> bool:
+    def line_is_for_item_check(self, line: str) -> bool:
         matched_item = False
 
         # if 'item.getID()' not in line:
@@ -1256,7 +984,7 @@ class EventAnalyzer:
 
             if "==" in operator:
                 matched_item = True
-                if_statement_contents = self.get_if_block_contents(line)
+                if_statement_contents = FileIO.get_if_block_contents(self.content, line)
 
                 if if_statement_contents == "":
                     matched_item = False
@@ -1289,7 +1017,7 @@ class EventAnalyzer:
             matched_item = True
             variable_check = '!' + self.item_check_variable
 
-            if variable_check in line and 'return' in self.get_if_block_contents(line):
+            if variable_check in line and 'return' in FileIO.get_if_block_contents(self.content, line):
                 #we've already documented the requirements for this location
                 matched_item = True
 
@@ -1312,11 +1040,8 @@ class EventAnalyzer:
             
         return matched_item
     
-    def _line_is_for_flags_check(self, line: str) -> bool:
+    def line_is_for_flags_check(self, line: str) -> bool:
         # if (!this.World.Flags.get("IsLorekeeperDefeated"))
-		# {
-		# 	return;
-		# }
         if 'World.Flags.get' not in line:
             return False
         
@@ -1332,7 +1057,7 @@ class EventAnalyzer:
             
         return False
     
-    def _line_is_for_retinue_check(self, line: str) -> bool:
+    def line_is_for_retinue_check(self, line: str) -> bool:
         #this.World.Retinue.hasFollower("follower.scout")
         if 'Retinue.hasFollower' not in line:
             return False
@@ -1352,14 +1077,3 @@ class EventAnalyzer:
                 return True
         
         return False
-
-# if __name__ == '__main__':
-#     if len(sys.argv) < 2:
-#         print("Usage: python analyze_bb_events_v3.py <path_to_events_directory> [output_file_name]")
-#         sys.exit(1)
-    
-#     events_dir = sys.argv[1]
-#     output_file = sys.argv[2] if len(sys.argv) > 2 else 'event_requirements'
-
-#     analyzer = EventAnalyzer()
-#     analyzer.analyze_directory(events_dir, output_file)

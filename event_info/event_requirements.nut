@@ -29,7 +29,7 @@ this.EventRequirements <- [
         TileRequirements = { TerrainType = "Desert", TacticalType = "DesertHills", Road = "OnRoad" },
     },
     {
-        BackgroundsUnlockingExtraInteractions = [{ background = "cultist", minLevel = 0, maxLevel = 0 }],
+        BackgroundsUnlockingExtraInteractions = [{ background = "cultist", minLevel = 0, maxLevel = 0 }, { background = "converted_cultist", minLevel = 0, maxLevel = 0 }],
         EventID = "event.cultish_arrangement",
         FileName = "cultish_arrangement_event.nut",
         MinDistanceFromSettlement = 8,
@@ -130,7 +130,7 @@ this.EventRequirements <- [
         FileName = "gladiators_food_event.nut",
         RequiredDLC = ["Blazing Deserts"],
         RequiredOrigins = ["scenario.gladiators"],
-        UnhandledLines = ["if (item != null && item.isItemType(this.Const.Items.ItemType.Food))", "if (item.getRawValue() >= 85)", "if (hasExquisiteFood)"],
+        SpecialConsiderations = ["Requires only food stacks valued at 84 or fewer crowns."],
     },
     {
         BackgroundRequirements = [{ background = "gladiator", minLevel = 0, maxLevel = 0, IsPlayerCharacter = "" }],
@@ -221,13 +221,14 @@ this.EventRequirements <- [
         TimeOfDay = "Day",
     },
     {
+        BackgroundRequirements = [{ background = "none", minLevel = 0, maxLevel = 0 }],
+        CandidateRequiredTraits = ["Mad"],
         EventID = "event.trade_black_book",
         FileName = "trade_black_book_event.nut",
         RequiredDLC = ["Blazing Deserts"],
         RequiredFlags = ["Lorekeeper is defeated"],
         RequiredItems = ["The Black Book"],
-        SpecialConsiderations = ["The Peasant Militia origin qualifies without having to read the black book."],
-        UnhandledLines = ["if (bro.getSkills().hasSkill(\"trait.mad\"))", "if (candidates_mad.len() == 0)"],
+        SpecialConsiderations = ["The Peasant Militia origin qualifies without having a bro with the Mad Trait.", "The Peasant Militia origin skips the Read Black Book event."],
     },
     {
         EventID = "event.traveler_south",

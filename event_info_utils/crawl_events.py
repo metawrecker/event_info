@@ -15,4 +15,4 @@ if __name__ == '__main__':
     output_file = sys.argv[2] if len(sys.argv) > 2 else 'event_requirements'
 
     analyzer = EventAnalyzer()
-    analyzer.analyze_directory(events_dir, output_file)
+    analyzer.iterate_through_squirrel_files(events_dir, output_file)
