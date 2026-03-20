@@ -541,7 +541,7 @@ EventInfoScreen.prototype.createFooter = function ()
         self.onLeaveButtonPressed();
     }, '', 1);
 
-	var version = $('<span class="emi-footer-version-number font-color-description font-bold title-font-normal">Version 0.9.9</span>')
+	var version = $('<span class="emi-footer-version-number font-color-description font-bold title-font-normal">Version 0.9.10</span>')
 	this.mDialogContainer.findDialogFooterContainer().append(version);
 }
 ///

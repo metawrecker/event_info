@@ -39,6 +39,175 @@
 		TimeToAddToMatchWorldClock = 0
 	},
 
+	/***************************************
+	 * "public" functions
+	***************************************/
+	function getLastEventTime()
+	{
+		local lastEventTime = ::World.Events.m.LastEventTime;
+
+		if (lastEventTime <= 0 || ::World.Events.m.LastEventID == 0) {
+			::logInfo("Aborting out of getLastEventTime()");
+			return "";
+		}
+
+		local days = lastEventTime / this.m.WorldSecondsPerDay;
+
+		return createTimeOfDayDisplay(days);
+	}
+
+	function processEventsAndStoreValues()
+	{
+		if (::mods_getRegisteredMod("mod_hardened") != null) {
+			::logInfo("Hardened mod detected - factoring timings and cooldowns using the alternative TimeOfDay schedule");
+		}
+		else {
+			::logInfo("Vanilla detected - factoring timings and cooldowns using the original TimeOfDay schedule");
+		}
+
+		local virtualTime = this.Time.getVirtualTimeF();
+		local eventManager = ::World.Events;
+
+		setEventTimeWorldMapTimeOffset();
+
+		this.m.BroHireEventsInPool = [],
+		this.m.NonBroHireEventsInPool = [],
+		this.m.EventsOnCooldown = [],
+		this.m.AllScores = 0;
+		this.m.NonEventBroHireScore = 0;
+		this.m.EventBroHireScore = 0;
+
+		local allEvents = eventManager.m.Events;
+		local lastEventId = eventManager.m.LastEventID;
+
+		for(local i = 0; i < allEvents.len(); i = ++i)
+		{
+			allEvents[i].clear();
+
+			//should we not clear last event???
+			if (lastEventId == allEvents[i].getID() && !allEvents[i].isSpecial())
+			{
+				allEvents[i].clear();
+			}
+			else
+			{
+				allEvents[i].update();
+			}
+
+			local currentEventId = allEvents[i].getID();
+
+			// ::logWarning("Event Name: " + createHumanReadableEventName(currentEventId));
+			// ::logInfo("Event cooldown setting: " + allEvents[i].m.Cooldown);
+			// ::logInfo("Event Score: " + allEvents[i].getScore());
+
+			if (allEvents[i].getScore() == 0 && allEvents[i].m.CooldownUntil > virtualTime && !allEvents[i].isSpecial()) {
+				//::logInfo("OG cooldown: " + allEvents[i].m.CooldownUntil);
+				local coolDownSeconds = getEventCooldownSecondsInWorldClockTime(allEvents[i]);
+				local cooldownUntil = coolDownSeconds / this.m.WorldSecondsPerDay;
+				local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.m.WorldSecondsPerDay);
+				local coolDownDisplay = this.Math.floor(cooldownUntil);
+				local firedOnDisplay = createTimeOfDayDisplay(firedOn);
+
+				if (coolDownDisplay > 9999) {
+					coolDownDisplay = 9999;
+				}
+
+				this.m.EventsOnCooldown.append({
+						id = currentEventId,
+						name = createHumanReadableEventName(currentEventId),
+						score = allEvents[i].getScore(),
+						firedOnNumber = firedOn,
+						firedOnDay = firedOnDisplay,
+						mayGiveBrother = eventMayGiveBrother(allEvents[i]),
+						onCooldownUntilDay = coolDownDisplay,
+						onCooldownUntilDayNumber = cooldownUntil,
+						icon = getEventIcon(currentEventId),
+						background = getBackgroundName(currentEventId)
+					});
+			}
+
+			if (allEvents[i].getScore() > 0)
+			{
+				local eventScore = allEvents[i].getScore();
+				local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
+
+				if (eventCooldown > 9999) {
+					eventCooldown = 9999;
+				}
+
+				this.m.AllScores += eventScore;
+
+				local eventToAdd = {
+						id = currentEventId,
+						name = createHumanReadableEventName(currentEventId),
+						score = eventScore,
+						cooldown = eventCooldown,
+						mayGiveBrother = false,
+						isBroEvent = eventIsBrotherEvent(currentEventId),
+						chanceForBrother = getChanceForBrother(currentEventId),
+						isCrisesEvent = isEventForACrises(currentEventId),
+						icon = getEventIcon(currentEventId),
+						background = getBackgroundName(currentEventId)
+					};
+
+				if (eventMayGiveBrother(allEvents[i])) {
+					eventToAdd.mayGiveBrother = true;
+					this.m.BroHireEventsInPool.append(eventToAdd);
+					this.m.EventBroHireScore += eventScore;
+				}
+				else {
+					this.m.NonBroHireEventsInPool.append(eventToAdd);
+					this.m.NonEventBroHireScore += eventScore;
+				}
+
+				//::MSU.Log.printData(eventToAdd);
+			}
+		}
+	}
+
+	function getAllEventsInQueue()
+	{
+		local events = getBroHiringEventsInQueue();
+		local nonBroEvents = getNonBroHiringEventsInQueue();
+
+		events.extend(nonBroEvents);
+
+		return events;
+	}
+
+	function getBroHiringEventsInQueue()
+	{
+		return this.m.BroHireEventsInPool;
+	}
+
+	function getNonBroHiringEventsInQueue()
+	{
+		return this.m.NonBroHireEventsInPool;
+	}
+
+	function getEventsOnCooldown()
+	{
+		return this.m.EventsOnCooldown;
+	}
+
+	function getAllEventScore()
+	{
+		return this.m.AllScores;
+	}
+
+	function getEventBroHiringScore()
+	{
+		return this.m.EventBroHireScore;
+	}
+
+	function getNonEventBroHiringScore()
+	{
+		return this.m.NonEventBroHireScore;
+	}
+
+	/***************************************
+	 * "private" functions
+	***************************************/
 	function eventIsBrotherEvent(currentEventId)
 	{
 		foreach ( key, eventId in this.m.BroHireEventIds)
@@ -416,169 +585,6 @@
 		// ::logInfo("************************************************************");
 
 		return timeDisplay;
-	}
-
-	function getLastEventTime()
-	{
-		local lastEventTime = ::World.Events.m.LastEventTime;
-
-		if (lastEventTime <= 0 || ::World.Events.m.LastEventID == 0) {
-			::logInfo("Aborting out of getLastEventTime()");
-			return "";
-		}
-
-		local days = lastEventTime / this.m.WorldSecondsPerDay;
-
-		return createTimeOfDayDisplay(days);
-	}
-
-	function processEventsAndStoreValues()
-	{
-		if (::mods_getRegisteredMod("mod_hardened") != null) {
-			::logInfo("Hardened mod detected - factoring timings and cooldowns using the alternative TimeOfDay schedule");
-		}
-		else {
-			::logInfo("Vanilla detected - factoring timings and cooldowns using the original TimeOfDay schedule");
-		}
-
-		local virtualTime = this.Time.getVirtualTimeF();
-		local eventManager = ::World.Events;
-
-		setEventTimeWorldMapTimeOffset();
-
-		this.m.BroHireEventsInPool = [],
-		this.m.NonBroHireEventsInPool = [],
-		this.m.EventsOnCooldown = [],
-		this.m.AllScores = 0;
-		this.m.NonEventBroHireScore = 0;
-		this.m.EventBroHireScore = 0;
-
-		local allEvents = eventManager.m.Events;
-		local lastEventId = eventManager.m.LastEventID;
-
-		for(local i = 0; i < allEvents.len(); i = ++i)
-		{
-			allEvents[i].clear();
-
-			//should we not clear last event???
-			if (lastEventId == allEvents[i].getID() && !allEvents[i].isSpecial())
-			{
-				allEvents[i].clear();
-			}
-			else
-			{
-				allEvents[i].update();
-			}
-
-			local currentEventId = allEvents[i].getID();
-
-			// ::logWarning("Event Name: " + createHumanReadableEventName(currentEventId));
-			// ::logInfo("Event cooldown setting: " + allEvents[i].m.Cooldown);
-			// ::logInfo("Event Score: " + allEvents[i].getScore());
-
-			if (allEvents[i].getScore() == 0 && allEvents[i].m.CooldownUntil > virtualTime && !allEvents[i].isSpecial()) {
-				//::logInfo("OG cooldown: " + allEvents[i].m.CooldownUntil);
-				local coolDownSeconds = getEventCooldownSecondsInWorldClockTime(allEvents[i]);
-				local cooldownUntil = coolDownSeconds / this.m.WorldSecondsPerDay;
-				local firedOn = cooldownUntil - (allEvents[i].m.Cooldown / this.m.WorldSecondsPerDay);
-				local coolDownDisplay = this.Math.floor(cooldownUntil);
-				local firedOnDisplay = createTimeOfDayDisplay(firedOn);
-
-				if (coolDownDisplay > 9999) {
-					coolDownDisplay = 9999;
-				}
-
-				this.m.EventsOnCooldown.append({
-						id = currentEventId,
-						name = createHumanReadableEventName(currentEventId),
-						score = allEvents[i].getScore(),
-						firedOnNumber = firedOn,
-						firedOnDay = firedOnDisplay,
-						mayGiveBrother = eventMayGiveBrother(allEvents[i]),
-						onCooldownUntilDay = coolDownDisplay,
-						onCooldownUntilDayNumber = cooldownUntil,
-						icon = getEventIcon(currentEventId),
-						background = getBackgroundName(currentEventId)
-					});
-			}
-
-			if (allEvents[i].getScore() > 0)
-			{
-				local eventScore = allEvents[i].getScore();
-				local eventCooldown = allEvents[i].m.Cooldown / this.World.getTime().SecondsPerDay;
-
-				if (eventCooldown > 9999) {
-					eventCooldown = 9999;
-				}
-
-				this.m.AllScores += eventScore;
-
-				local eventToAdd = {
-						id = currentEventId,
-						name = createHumanReadableEventName(currentEventId),
-						score = eventScore,
-						cooldown = eventCooldown,
-						mayGiveBrother = false,
-						isBroEvent = eventIsBrotherEvent(currentEventId),
-						chanceForBrother = getChanceForBrother(currentEventId),
-						isCrisesEvent = isEventForACrises(currentEventId),
-						icon = getEventIcon(currentEventId),
-						background = getBackgroundName(currentEventId)
-					};
-
-				if (eventMayGiveBrother(allEvents[i])) {
-					eventToAdd.mayGiveBrother = true;
-					this.m.BroHireEventsInPool.append(eventToAdd);
-					this.m.EventBroHireScore += eventScore;
-				}
-				else {
-					this.m.NonBroHireEventsInPool.append(eventToAdd);
-					this.m.NonEventBroHireScore += eventScore;
-				}
-
-				//::MSU.Log.printData(eventToAdd);
-			}
-		}
-	}
-
-	function getAllEventsInQueue()
-	{
-		local events = getBroHiringEventsInQueue();
-		local nonBroEvents = getNonBroHiringEventsInQueue();
-
-		events.extend(nonBroEvents);
-
-		return events;
-	}
-
-	function getBroHiringEventsInQueue()
-	{
-		return this.m.BroHireEventsInPool;
-	}
-
-	function getNonBroHiringEventsInQueue()
-	{
-		return this.m.NonBroHireEventsInPool;
-	}
-
-	function getEventsOnCooldown()
-	{
-		return this.m.EventsOnCooldown;
-	}
-
-	function getAllEventScore()
-	{
-		return this.m.AllScores;
-	}
-
-	function getEventBroHiringScore()
-	{
-		return this.m.EventBroHireScore;
-	}
-
-	function getNonEventBroHiringScore()
-	{
-		return this.m.NonEventBroHireScore;
 	}
 };
 

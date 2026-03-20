@@ -3,9 +3,9 @@
 import re
 import os
 import sys
-import json
+from file_io import FileIO
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set
+from typing import Dict, Any, Optional
 
 class EventAnalyzer:
     error_count = 0
@@ -23,7 +23,7 @@ class EventAnalyzer:
             'FileName': None,
             'RequiredDLC': [],
             'TimeOfDay': None,
-            'MustHaveOpenRosterSpace': None,
+            'NumberOfOpenRosterSlots': None,
             'MinimumBrotherCount': None,
             'MaximumBrotherCount': None,
             'MininumCrowns': None,
@@ -44,13 +44,16 @@ class EventAnalyzer:
             'MaximumDays': None,
             'NumberOfEmptyInventorySlots': None,
             'PlayerCharacterExcluded': None,
+            'PlayerCharacterRequired': None,
             'ExcludedItems': [],
             'RequiredItems': [],
             'ExcludedFlags': [],
             'RequiredFlags': [],
             'SpecialConsiderations': [],
             'RequiredRetinue': [],
-            'ExcludedRetinue': []
+            'ExcludedRetinue': [],
+            'CandidateRequiredTraits': [],
+            'CandidateExcludedTraits': []
         }
         
         self.current_event_id = None
@@ -102,7 +105,11 @@ class EventAnalyzer:
             "follower.paymaster": "Paymaster"
         }
 
-    def analyze_directory(self, directory: str, output_file: str = 'event_requirements.nut'):
+        self.trait_map = {
+            "trait.mad": "Mad"
+        }
+
+    def analyze_directory(self, directory: str, output_file: str = 'event_requirements'):
         results = []
         
         event_dir = Path(directory)
@@ -113,24 +120,24 @@ class EventAnalyzer:
         nut_files = list(event_dir.rglob('*.nut'))
         print(f"Found {len(nut_files)} .nut files")
 
-        analyzer = EventAnalyzer()
+        #analyzer = EventAnalyzer()
         
         for i, filepath in enumerate(nut_files, 1):
             if i % 50 == 0:
                 print(f"Processing {i}/{len(nut_files)}...")
             
-            result = analyzer.analyze_file(str(filepath))
+            result = self.analyze_file(str(filepath))
             if result:
                 #print(result)
                 results.append(result)
 
         print(f"\nAnalyzed {len(results)} event files with requirements")
-        print(f"\n{EventAnalyzer.error_count} unhandled lines")
+        print(f"\n{self.error_count} unhandled lines")
 
         #print(results)
         
-        generate_json_file(results, 'event_info/event_requirements.json')
-        generate_squirrel_file(results, output_file)
+        FileIO.generate_json_file(results, output_file + '.json')
+        FileIO.generate_squirrel_file(results, output_file + '.nut')
         print(f"Generated {output_file}")
 
     def analyze_file(self, filepath: str) -> Optional[Dict[str, Any]]:
@@ -418,6 +425,7 @@ class EventAnalyzer:
             handled = self._line_is_for_money_check(line) or handled
             handled = self._line_is_for_tile_check(line) or handled
             handled = self._line_is_for_brother_background_check(line) or handled
+            handled = self._line_is_for_a_trait_check(line) or handled
             handled = self._line_is_for_candidate_check(line) or handled
             handled = self._line_is_for_origin_check(line) or handled
             handled = self._line_is_for_crises_event(line) or handled
@@ -531,11 +539,53 @@ class EventAnalyzer:
         
         if self.current_event_id == "event.cultural_conflagration":
             if "if (bro.getEthnicity() == 0)" in line:
-                self.data['SpecialConsiderations'].append("Must have at least 1 southern and 1 northern ethnicity bro   .")
+                self.data['SpecialConsiderations'].append("Must have at least 1 southern and 1 northern ethnicity bro.")
                 return True
             
             if "if (northern <= 1 || southern <= 1)" in line:
                 return True
+            
+        if self.current_event_id == "event.pirates":
+            if 'this.World.Assets.getOrigin().getID() == "scenario.manhunters"' in line:
+                self.data['SpecialConsiderations'].append("Manhunters origin must have 2 open roster slot.")
+                return True
+        
+        if self.current_event_id == "event.desert_bugbite":
+            if 'lowestBro' in line:
+                self.data['SpecialConsiderations'].append("The lowest health brother without Strong, Tough, Lucky, or Southern ethnicity is most likely to be bitten.")
+                self.data['SpecialConsiderations'].append("A bro that is Exhausted will not be bitten.")
+                # self.data['SpecialConsiderations'].append("Strong, Tough, Lucky, or a Southern ethnicity bro is less likely to get bit.")
+                return True
+            
+            if 'bro.m.Ethnicity' in line or 'lowestChance' in line or 'bro.getSkills().hasSkill' in line:
+                return True
+
+        if self.current_event_id == "event.desert_fall":
+            if 'lowestBro' in line:
+                self.data['SpecialConsiderations'].append("The lowest health brother without Strong, Tough, Lucky, and Southern ethnicity is most likely to fall.")
+                self.data['SpecialConsiderations'].append("A bro that has a Bruised Leg will not fall.")
+                return True
+           
+            if 'bro.m.Ethnicity' in line or 'lowestChance' in line or 'bro.getSkills().hasSkill' in line:
+                return True
+            
+        if self.current_event_id == "event.desert_feet":
+            if '(bro.m.Ethnicity == 1)' in line:
+                self.data['SpecialConsiderations'].append("Must have 3 or more northern ethnicity bros.")
+                return True
+            
+            if 'if (numNortherners < 3)' in line:
+                return True
+            
+        if self.current_event_id == "event.desert_heat":
+            if 'lowestBro' in line:
+                self.data['SpecialConsiderations'].append("The lowest health brother without Strong, Tough, Lucky, and Southern ethnicity is most likely to become Exhausted.")
+                self.data['SpecialConsiderations'].append("A bro that has is Exhausted will not get heat stroke.")
+                return True
+            
+            if 'bro.m.Ethnicity' in line or 'lowestChance' in line or 'bro.getSkills().hasSkill' in line:
+                return True
+
 
         return False
 
@@ -604,7 +654,7 @@ class EventAnalyzer:
             operator = match.group(1)
 
             if '>=' in operator:
-                self.data['MustHaveOpenRosterSpace'] = True
+                self.data['NumberOfOpenRosterSlots'] = 1
             
             return True
             
@@ -703,10 +753,10 @@ class EventAnalyzer:
                             return False
                         
                         if 'break;' in if_lines[1]:
-                            match = re.search(r'([\w.]+)\s*(=|!=)\s*([\w.]+)', if_lines[0])
+                            matches = re.search(r'([\w.]+)\s*(=|!=)\s*([\w.]+)', if_lines[0])
 
-                            if match:
-                                self.location_check_variable = match.group(1)
+                            if matches:
+                                self.location_check_variable = matches.group(1)
                                 print("Just set Location Check to: " + self.location_check_variable)
                     
         if 'bestDistance' in line:
@@ -727,10 +777,10 @@ class EventAnalyzer:
             matches = re.findall(rf'{self.location_check_variable}\s*(=|!=|<|>|<=|>=)\s*(\d+)', line)
 
             if matches:
-                for match in matches:
+                for matches in matches:
                     #print("Matched: " + self.location_check_variable)
-                    operator = match[0]
-                    distance = int(match[1])
+                    operator = matches[0]
+                    distance = int(matches[1])
 
                     if '>=' in operator:
                         self.data['MaxDistanceFromSettlement'] = distance + 1
@@ -756,26 +806,33 @@ class EventAnalyzer:
             tileDetails["Road"] = "OffRoad"
 
         if 'currentTile.Type' in line:
-            match = re.search(r'([\w.]+)\s*(==|!=)\s*this\.Const\.World\.TerrainType\.(\w+)', line)
+            matches = re.findall(r'([\w.]+)\s*(==|!=)\s*this\.Const\.World\.TerrainType\.(\w+)', line)
 
-            if match:
-                matched_location = True
-                operator = match.group(2)
-                terrainType = match.group(3)
+            if matches:
+                newlist = []
 
-                if '!=' in operator:
-                    tileDetails["TerrainType"] = terrainType
+                for match in matches:
+                    operator = match[1]
+                    terrainType = match[2]
+
+                    newlist.append(terrainType)
+
+                    if '!=' in operator:
+                        matched_location = True
+
+                    tileDetails["TerrainType"] = ", ".join(newlist)
 
         if 'currentTile.TacticalType' in line:
-            match = re.search(r'([\w.]+)\s*(==|!=)\s*this\.Const\.World\.TerrainTacticalType\.(\w+)', line)
+            matches = re.findall(r'([\w.]+)\s*(==|!=)\s*this\.Const\.World\.TerrainTacticalType\.(\w+)', line)
 
-            if match:
-                matched_location = True
-                operator = match.group(2)
-                tactical_type = match.group(3)
+            if matches:
+                for match in matches:
+                    matched_location = True
+                    operator = match[1]
+                    tactical_type = match[2]
 
-                if '!=' in operator:
-                    tileDetails["TacticalType"] = tactical_type
+                    if '!=' in operator:
+                        tileDetails["TacticalType"] = tactical_type
 
         # currentTile.SquareCoords.Y > this.World.getMapSize().Y * 0.7
         if "SquareCoords" in line and "getMapSize()" in line:
@@ -887,7 +944,45 @@ class EventAnalyzer:
                             background_name = background_name = background_str.replace('background.', '')
                             self.data['BackgroundRequirements'].append({"background": background_name, "minLevel": min_level, "maxLevel": max_level})
 
+                            if 'candidate' in if_statement_lines:
+                                self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": "other"})
+                                print("setting candidate")
+                            
+                            if 'return' in if_statement_lines:
+                                print("return in candiate check")
+
+                            if 'candidate' in else_lines:
+                                print("candidate else")
+                                self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
+
                 return True
+            elif 'getBackground()' in line and 'IsPlayerCharacter()' in line:
+                matches = re.findall(r'getBackground\(\)\.getID\(\)\s*(==|!=)\s*"([^"]+)"', line)
+
+                if matches:
+                    for match in matches:
+                        operator = match[0]
+                        background_str = match[1]
+                    
+                        background_name = background_str.replace('background.', '')
+
+                        if "==" in operator and background_name not in self.data['BackgroundRequirements']:
+                            if 'return' in if_statement_lines:
+                                found_match = True
+                                continue
+         
+                            found_match = True
+
+                        if 'candidate' in if_statement_lines:
+                            self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": background_name, "IsPlayerCharacter": True})
+                            print("setting candidate as player character")
+                        
+                        if 'return' in if_statement_lines:
+                            print("return in candiate check")
+
+                        if 'candidate' in else_lines:
+                            print("candidate else")
+                            self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
             else:
                 matches = re.findall(r'bro\.getLevel\(\)\s*(>=|<=|>|<|==|!=)\s*(\d+).*?(==|!=)\s*"([\w.]+)"', line)
 
@@ -914,9 +1009,36 @@ class EventAnalyzer:
                             background_name = background_name = background_str.replace('background.', '')
                             self.data['BackgroundRequirements'].append({"background": background_name, "minLevel": min_level, "maxLevel": max_level})
 
+                            if 'candidate' in if_statement_lines:
+                                self.candidates_checked.append({"candidate_variable": if_statement_lines.split('\n')[0].split('.')[0], "background": "other"})
+                                print("setting candidate")
+                            
+                            if 'return' in if_statement_lines:
+                                print("return in candiate check")
+
+                            if 'candidate' in else_lines:
+                                print("candidate else")
+                                self.candidates_checked.append({"candidate_variable": else_lines.split('\n')[0].split('.')[0], "background": "other"})
+
                 return True
         return found_match
     
+    def _line_is_for_a_trait_check(self, line: str) -> bool:
+        if 'bro.getSkills()' not in line:
+            return False
+    
+        match = re.search(r'hasSkill\("([^"]+)"\)', line)
+        if_statement_lines = self.get_if_block_contents(line)
+
+        if match:
+            trait = match.group(1)
+            if 'return' in if_statement_lines:
+                self.data["CandidateExcludedTraits"].append(self.trait_map[trait])
+
+                return True
+
+        return False
+
     def _line_is_for_candidate_check(self, line: str) -> bool:
         if ('candidate' not in line and 'len()' not in line) or len(self.candidates_checked) == 0:
             return False
@@ -946,6 +1068,14 @@ class EventAnalyzer:
                         return True
                     else:
                         self.data['BackgroundRequirements'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0})
+                    return True
+                
+                # working on if (candidates.len() < 2) for Gladiator_vibes
+                if '<' in operator and number > 0 and 'return' in if_statement_lines:
+                    if candidate['background'] == "other":
+                        return True
+                    else:
+                        self.data['BackgroundRequirements'].append({"background": candidate["background"], "minLevel": 0, "maxLevel": 0, "IsPlayerCharacter": candidate.get("IsPlayerCharacter", "")})
                     return True
 
             print(candidate)
@@ -1038,13 +1168,13 @@ class EventAnalyzer:
             days = int(match.group(2))
 
             if '<' in operator:
-                self.data['MinimumDays'] = days + 1
+                self.data['MinimumDays'] = days #+ 1
             elif '<=' in operator:
-                self.data['MinimumDays'] = days
+                self.data['MinimumDays'] = days + 1
             elif '>' in operator:
-                self.data['MaximumDays'] = days + 1
+                self.data['MaximumDays'] = days #+ 1
             elif '>=' in operator:
-                self.data['MaximumDays'] = days
+                self.data['MaximumDays'] = days + 1
         
             return True
 
@@ -1082,13 +1212,17 @@ class EventAnalyzer:
         return False
 
     def _line_is_for_player_check(self, line: str) -> bool:
-        if 'asSkill("trait.player")' not in line:
+        if 'asSkill("trait.player")' not in line and '"IsPlayerCharacter")' not in line:
             return False
         
         if_statement = self.get_if_block_contents(line)
 
         if 'continue' in if_statement:
             self.data['PlayerCharacterExcluded'] = True
+            return True
+        
+        if 'IsPlayerCharacter' in line:
+           # self.data['PlayerCharacterRequired'] = True
             return True
 
         return False
@@ -1219,74 +1353,13 @@ class EventAnalyzer:
         
         return False
 
-def generate_json_file(events: List[Dict[str, Any]], output_file: str):
-    json_string = json.dumps(events)
+# if __name__ == '__main__':
+#     if len(sys.argv) < 2:
+#         print("Usage: python analyze_bb_events_v3.py <path_to_events_directory> [output_file_name]")
+#         sys.exit(1)
+    
+#     events_dir = sys.argv[1]
+#     output_file = sys.argv[2] if len(sys.argv) > 2 else 'event_requirements'
 
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(json_string)
-
-def generate_squirrel_file(events: List[Dict[str, Any]], output_file: str):
-    lines = [
-        "// Battle Brothers Event Requirements Database",
-        f"// Total events: {len(events)}",
-        "",
-        "this.EventRequirements <- [",
-    ]
-    
-    for i, event in enumerate(events):
-        lines.append("    {")
-        
-        for key, value in sorted(event.items()):
-            squirrel_value = convert_python_to_squirrel(value)
-            lines.append(f"        {key} = {squirrel_value},")
-        
-        if i < len(events) - 1:
-            lines.append("    },")
-        else:
-            lines.append("    }")
-        
-        #lines.append("")
-    
-    lines.append("];")
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(lines))
-
-def convert_python_to_squirrel(value):
-    if value is None:
-        return "null"
-    elif isinstance(value, bool):
-        return "true" if value else "false"
-    elif isinstance(value, int):
-        return str(value)
-    elif isinstance(value, float):
-        return str(value)
-    elif isinstance(value, str):
-        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
-        return f'"{escaped}"'
-    elif isinstance(value, dict):
-        if not value:
-            return "{}"
-        items = []
-        for k, v in value.items():
-            squirrel_val = convert_python_to_squirrel(v)
-            items.append(f"{k} = {squirrel_val}")
-        return "{ " + ", ".join(items) + " }"
-    elif isinstance(value, list):
-        if not value:
-            return "[]"
-        items = [convert_python_to_squirrel(item) for item in value]
-        return "[" + ", ".join(items) + "]"
-    return "null"
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: python analyze_bb_events_v3.py <path_to_events_directory> [output_file.nut]")
-        sys.exit(1)
-    
-    events_dir = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else 'event_requirements.nut'
-    
-    #tracker = PatternTracker()
-    analyzer = EventAnalyzer()
-    analyzer.analyze_directory(events_dir, output_file)
+#     analyzer = EventAnalyzer()
+#     analyzer.analyze_directory(events_dir, output_file)
